@@ -2,7 +2,7 @@ if ( GetLocale() ~= "zhTW" ) then
 	return;
 end
 
-local L = LibStub("AceLocale-3.0"):NewLocale("Carbonite.Notes", "zhTW", true)
+local L = LibStub("AceLocale-3.0"):NewLocale("Carbonite.Notes", "zhTW")
 if not L then return end
 
 L["Note Options"] = true
@@ -35,6 +35,16 @@ L["Name"] = true
 L["Nothing to paste"] = true
 L["Can't paste that on the left side"] = true
 L["Can't paste that on the right side"] = true
+L["Note"] = true
 L["Notes"] = true
 L["Note Addons"] = true
 L["My Notes"] = true
+
+L["Reset old notes data"] = true
+L["Display Handynotes On Map"] = true
+L["If you have HandyNotes installed, allows them on the Carbonite map"] = true
+L["Handnotes Icon Size"] = true
+
+-- Keybinds
+L["Carbonite Notes"] = "Carbonite Notes"
+L["NxTOGGLEFAV"] = "show/hide Notes"

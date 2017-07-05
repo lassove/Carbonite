@@ -1,4 +1,4 @@
-local L = LibStub("AceLocale-3.0"):NewLocale("Carbonite.Notes", "zhCN", true)
+local L = LibStub("AceLocale-3.0"):NewLocale("Carbonite.Notes", "zhCN")
 if not L then return end
 
 L["Note Options"] = "标记模块"
@@ -35,3 +35,12 @@ L["Note"] = "标记"
 L["Notes"] = "标记"
 L["Note Addons"] = "标记插件"
 L["My Notes"] = "我的标记"
+
+L["Reset old notes data"] = "重置旧标记数据"
+L["Display Handynotes On Map"] = "地图上显示Handynotes"
+L["If you have HandyNotes installed, allows them on the Carbonite map"] = "允许Handynotes图标显示在Carbonite地图上"
+L["Handnotes Icon Size"] = "Handynotes图标大小"
+
+-- Keybinds
+L["Carbonite Notes"] = "Carbonite 标记模块"
+L["NxTOGGLEFAV"] = "显示/隐藏标记"

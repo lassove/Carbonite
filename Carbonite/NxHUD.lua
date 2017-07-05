@@ -23,6 +23,8 @@
 --------
 -- Init HUD data
 
+local L = LibStub("AceLocale-3.0"):GetLocale("Carbonite")
+
 function Nx.HUD:Init()
 
 	Nx.HUD.TexNames = { "", "Chip", "Gloss", "Glow", "Neon" }
@@ -105,7 +107,7 @@ function Nx.HUD:Create()
 	local t = but:CreateTexture()
 	t:SetAllPoints (but)
 	t:SetTexture ("Interface\\AddOns\\Carbonite\\Gfx\\Map\\IconCircle")
---	t:SetTexture (1, 1, 1, 1)
+--	t:SetColorTexture (1, 1, 1, 1)
 	but.texture = t
 
 	but:SetWidth (10)
@@ -151,14 +153,14 @@ function Nx.HUD:UpdateOptions()
 --		self.Frm:EnableMouse (not lock)
 	end
 --PAIDE!
-	
+
 	local gopts = self.GOpts
 
 	local name = Nx.db.profile.Track.AGfx
 	self.Frm.texture:SetTexture ("Interface\\AddOns\\Carbonite\\Gfx\\Map\\HUDArrow" .. name)
 
 	local f = self.Frm
-	
+
 	f:SetPoint ("CENTER", Nx.db.profile.Track.AXO, -win.TitleH / 2 - 32 - Nx.db.profile.Track.AYO)
 
 	local wh = Nx.db.profile.Track.ASize
@@ -234,7 +236,7 @@ function Nx.HUD:Update (map)
 --PAIDE!
 
 		local col = dirDist < 5 and "|cffa0a0ff" or ""
-		local str = format ("%s%d yds", col, dist)
+		local str = format ("%s%d " .. L["yds"], col, dist)
 
 		if Nx.db.profile.Track.ShowDir then
 			local fmt = dirDist < 1 and " %.1f deg" or " %d deg"
@@ -254,9 +256,9 @@ function Nx.HUD:Update (map)
 				local eta = map.TrackETA or dist / map.PlyrSpeed
 
 				if eta < 60 then
-					self.ETAStr = format ("|cffdfffdf %.0f secs", eta)
+					self.ETAStr = format ("|cffdfffdf %.0f " .. L["secs"], eta)
 				else
-					self.ETAStr = format ("|cffdfdfdf %.1f mins", eta / 60)
+					self.ETAStr = format ("|cffdfdfdf %.1f " .. L["mins"], eta / 60)
 				end
 			end
 
@@ -272,20 +274,18 @@ function Nx.HUD:Update (map)
 		local atPt, relTo, relPt, x, y = wfrm:GetPoint()
 
 		local w, h = win:GetSize()
-		local tw = win:GetTitleTextWidth() + 2
-
-		local d = (tw - w) / 2
-
+		local tw = win:GetTitleTextWidth() + 2		
+		local d = (tw - w) / 2		
 		if strfind (atPt, "LEFT") then
 			x = x - d
 		elseif strfind (atPt, "RIGHT") then
 			x = x + d
+		end		
+		if not InCombatLockdown() then		
+			wfrm:ClearAllPoints()
+			wfrm:SetPoint (atPt, x, y)
+			win:SetSize (tw, 0, true)
 		end
-
-		wfrm:ClearAllPoints()
-		wfrm:SetPoint (atPt, x, y)
-		win:SetSize (tw, 0, true)
-
 --PAIDS!
 		if Nx.db.profile.Track.TBut and not win:IsCombatHidden() then
 
@@ -344,20 +344,3 @@ end
 
 -------------------------------------------------------------------------------
 -- EOF
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

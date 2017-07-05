@@ -1,4 +1,8 @@
-local L = LibStub("AceLocale-3.0"):NewLocale("Carbonite", "zhCN", true)
+if ( GetLocale() ~= "zhCN" ) then
+	return
+end
+
+local L = LibStub("AceLocale-3.0"):NewLocale("Carbonite", "zhCN")
 if not L then return end
 -- zhCN locale by Raka@Raka.Rocks
 -- Profiles Menu
@@ -19,15 +23,25 @@ L["Delete a Profile"] = "删除配置文件"
 L["Deletes a profile from the database."] = "从数据库删除配置文件。"
 
 -- Main Menu
-L["Main Options"] = "主要设定" -- This won't even show up in the window - Raka
+L["Main Options"] = "主要设定"
 L["\nCarbonite is a full featured, powerful map addon providing a versitile easy to use google style map which either can replace or work with the current blizzard maps.\n\nThrough modules it can also be expanded to do even more to help make your game easier."] = "\nCarbonite 是一个全功能的地图插件，可以让你使用谷歌地图方式操作游戏地图，并可以和暴雪自带游戏地图协同工作。\n\n通过不同的功能模块可以让你的游戏生活变得更加轻松惬意。"
-L["Release Version"] = "版本："
-L["Maintained by"] = "维护："
-L["Website"] = "网站："
+L["Release Version"] = "版本"
+L["Maintained by"] = "维护"
+L["Website"] = "网站"
 L["For support, please visit the forums for Carbonite on WoW Interface."] = "如需获取支持，请访问WoW Interface的Carbonite论坛."
-L["Special thanks to"] = "特别感谢: "
+L["Special thanks to"] = "特别感谢"
 L["Cirax for Carbonite2 Logo"] = "Cirax 制作 Carbonite2 Logo"
-L["JimboBlue for guide location updates and checking"] = "JimboBlue 对百科指南兴趣点位置的升级与确认"
+L["ircdirk & atl77 for Quest Database updates"] = "ircdirk & atl77 对任务数据库的升级"
+L["Naharis for quest watchlist fixes"] = "Naharis 对任务监视列表的修复"
+L["nelegalno for many cleanups, api fixes"] = "nelegalno 对api改动的修复与文件清理"
+L["JimJoBlue for guide location updates"] = "JimJoBlue 对百科指南兴趣点位置的升级"
+L["Localization Efforts By:"] = "插件本地化贡献者:"
+L["frFR - powerstrk"] = true
+L["deDE - atl77 & samyonair"] = true
+L["itIT - ThorwaldOdin"] = true
+L["ruRU - NotDead"] = true
+L["zhCN - Raka-loah"] = true
+L["zhTW - kc305chen"] = true
 
 -- Battlegrounds Menu
 L["Battlegrounds"] = "战场"
@@ -53,8 +67,12 @@ L["Attempts to hide the two gryphons on your action bar."] = "尝试隐藏动作
 L["Map Options"] = "地图设置"
 L["Use Carbonite Map instead of Blizzards (Alt-M will open world map)"] = "使用Carbonite地图替代暴雪地图 (Alt+M打开暴雪地图)"
 L["When enabled, pressing 'M' will maximize the carbonite map instead of opening the world map."] = "启用时，按M键将打开Carbonite地图而不是暴雪自带地图。"
-L["Enable Compatability Mode"] = "启用兼容模式"
-L["When Enabled, Carbonite will performe combat checks before any map/window functions. This eliminates other UI's from causing protected mode errors."] = "启用时, Carbonite在战斗中将会检测窗体函数以防止与其他窗体插件冲突并产生界面错误。"
+L["Enable Combat Compatibility Mode"] = "开启战斗兼容模式"
+L["Take Map Function Control"] = "接管地图功能"
+L["When enabled Carbonite takes control of 2 blizzard map functions to help prevent map flickers, and unneccsary lag causing calls to change the map."] = "启用时，Carbonite会接管2个暴雪地图功能，防止地图闪烁，减少地图切换时的卡顿。"
+L["Hide Map In Combat"] = "战斗中隐藏大地图"
+L["If large map is open when you enter combat attempts to hide it."] = "进入战斗时隐藏大地图"
+L["When Enabled, Carbonite will perform combat checks before any map/window functions. This eliminates other UI's from causing protected mode errors."] = "启用时, Carbonite在战斗中将会检测窗体函数以防止与其他窗体插件冲突并产生界面错误。"
 L["Center map when maximizing"] = "最大化时居中"
 L["When enabled, the map will center on your current zone when you maximize it"] = "启用时，当你最大化Carbonite地图时将会显示以你为中心的区域。"
 L["Ignore mouse on map except when ALT is pressed"] = "小地图窗口忽略鼠标点击(需要按住Alt点击)"
@@ -75,8 +93,6 @@ L["Restore map scale after track"] = "追踪完成后恢复地图缩放"
 L["When enabled, restores your previous map scale when tracking is cleared."] = "启用时，追踪完成后将恢复地图为之前的缩放。"
 L["Use Travel Routing"] = "使用旅行路径规划"
 L["When enabled, attempts to route your travel when destination is in another zone."] = "启用时，若目标在另一个地图区域，则使用旅行路径规划。"
-L["Restore map scale after track"] = "追踪完成后恢复地图缩放"
-L["When enabled, restores your previous map scale when tracking is cleared."] = "启用时，追踪完成后将恢复地图为之前的缩放。"
 L["Show Movement Trail"] = "显示移动轨迹"
 L["When enabled, draws a trail on the map to show your movements."] = "启用时，在地图上绘制出你的移动轨迹。"
 L["Movement trail distance"] = "移动轨迹点间隔"
@@ -122,7 +138,7 @@ L["Middle Click"] = "中键点击"
 L["Sets the action performed when clicking your middle mouse button"] = "设置中键点击时的地图操作"
 L["Alt Middle Click"] = "Alt-中键"
 L["Sets the action performed when middle clicking holding ALT"] = "设置Alt-中键时的地图操作"
-L["Ctrl Left Click"] = "Ctrl-左键"
+L["Ctrl Middle Click"] = "Ctrl-左键"
 L["Sets the action performed when middle clicking holding CTRL"] = "设置Ctrl-中键时的地图操作"
 L["Right Click"] = "右键点击"
 L["Sets the action performed when right clicking the map"] = "设置右键点击时的地图操作"
@@ -202,7 +218,7 @@ L["Enable Calendar Minimap Button"] = "启用日历按钮"
 L["Shows the calendar minimap button in the button panel"] = "在按钮窗口显示日历按钮"
 L["Enable Clock Minimap Button"] = "启用时钟按钮"
 L["Shows the clock minimap button in the button panel"] = "在按钮窗口显示时钟按钮"
-L["Enable World Map Minimap Button"] = "启用世界地图按钮",
+L["Enable World Map Minimap Button"] = "启用世界地图按钮"
 L["Shows the world map minimap button in the button panel"] = "在按钮窗口显示世界地图按钮"
 
 -- Font Options
@@ -255,6 +271,16 @@ L["Herbalism"] = "草药"
 L["Display"] = "显示"
 L["Nodes On Map"] = "采集点在地图上"
 L["Mining"] = "矿石"
+L["Timber"] = "树木"
+L["Delete Timber Gather Locations"] = "删除树木采集点位置"
+L["Small Timber"] = "小型树木"
+L["Medium Timber"] = "中型树木"
+L["Large Timber"] = "大型树木"
+L["Show Timber Locations"] = "显示树点"
+L["Lumbermill"] = "伐木场"
+L["Delete"] = "删除"
+L["Import"] = "导入"
+L["Cancel"] = "取消"
 
 -- Menu Options
 L["Menu Options"] = "菜单选项"
@@ -336,9 +362,6 @@ L["Reload UI"] = "重载界面"
 L["Reset options"] = "重置设定"
 L["Reset global options"] = "重置全局设定"
 L["Reset window layouts"] = "重置窗口布局"
-L["Delete Herb Locations"] = "删除草药位置"
-L["Delete Mine Locations"] = "删除矿点位置"
-L["Delete Misc Locations"] = "删除杂项位置"
 L["Import Herbs"] = "导入草点"
 L["Import Mining"] = "导入矿点"
 L["Import Misc"] = "导入杂项"

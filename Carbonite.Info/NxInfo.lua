@@ -1,4 +1,4 @@
-﻿---------------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------
 -- NxInfo - Information window
 -- Copyright 2008-2012 Carbon Based Creations, LLC
 ---------------------------------------------------------------------------------------
@@ -20,7 +20,7 @@
 -- along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ---------------------------------------------------------------------------------------
 
---------
+---------------------------------------------------------------------------------------
 
 CarboniteInfo = LibStub("AceAddon-3.0"):NewAddon("Carbonite.Info","AceEvent-3.0", "AceComm-3.0")
 local L = LibStub("AceLocale-3.0"):GetLocale("Carbonite.Info", true)
@@ -31,24 +31,24 @@ Nx.InfoStats = {}
 
 local defaults = {
 	profile = {
-		Info = {		    
+		Info = {
 			ListCol = "0|0|0|0.4",
 			Lock = false,
 			InfoFont = "Arial",
 			InfoFontSize = 11,
 			InfoFontSpacing = 0,
-			
-		},	   
+
+		},
 	},
 }
 local options
 
-local function createOptions() 
+local function createOptions()
 	if not options then
 		options = {
 			type = "group",
 			name = L["Info Options"],
-			args = {	
+			args = {
 				InfoLock = {
 					order = 1,
 					type = "toggle",
@@ -59,9 +59,9 @@ local function createOptions()
 						return Nx.idb.profile.Info.Lock
 					end,
 					set = function()
-						Nx.idb.profile.Info.Lock = not Nx.idb.profile.Info.Lock						
+						Nx.idb.profile.Info.Lock = not Nx.idb.profile.Info.Lock
 						Nx.Info:OptionsUpdate()
-					end,				
+					end,
 				},
 				InfoBGCol = {
 					order = 2,
@@ -80,13 +80,13 @@ local function createOptions()
 					set = function(_,r,g,b,a)
 						Nx.idb.profile.Info.ListCol = r .. "|" .. g .. "|" .. b .. "|" .. a
 						Nx.Info:OptionsUpdate()
-					end,						
+					end,
 				},
 				InfoFont = {
 					order = 3,
-					type	= "select",
-					name	= L["Info Font"],
-					desc	= L["Sets the font to be used for info windows"],
+					type = "select",
+					name = L["Info Font"],
+					desc = L["Sets the font to be used for info windows"],
 					get	= function()
 						local vals = Nx.Opts:CalcChoices("FontFace","Get")
 						for a,b in pairs(vals) do
@@ -98,16 +98,16 @@ local function createOptions()
 					end,
 					set	= function(info, name)
 						local vals = Nx.Opts:CalcChoices("FontFace","Get")
-						Nx.idb.profile.Info.InfoFont = vals[name]						
+						Nx.idb.profile.Info.InfoFont = vals[name]
 						Nx.Opts:NXCmdFontChange()
 					end,
 					values	= function()
 						return Nx.Opts:CalcChoices("FontFace","Get")
-					end,					
+					end,
 				},
 				InfoFontSize = {
 					order = 4,
-					type = "range",							
+					type = "range",
 					name = L["Info Font Size"],
 					desc = L["Sets the size of the info font"],
 					min = 6,
@@ -120,11 +120,11 @@ local function createOptions()
 					set = function(info,value)
 						Nx.idb.profile.Info.InfoFontSize = value
 						Nx.Opts:NXCmdFontChange()
-					end,				
-				},		
+					end,
+				},
 				InfoFontSpacing = {
 					order = 5,
-					type = "range",							
+					type = "range",
 					name = L["Info Font Spacing"],
 					desc = L["Sets the spacing of the info font"],
 					min = -10,
@@ -137,11 +137,12 @@ local function createOptions()
 					set = function(info,value)
 						Nx.idb.profile.Info.InfoFontSpacing = value
 						Nx.Opts:NXCmdFontChange()
-					end,				
-				},					
+					end,
+				},
 			},
 		}
-	end
+	end	
+	Nx.Opts:AddToProfileMenu(L["Info"],2,Nx.idb)	
 	return options
 end
 
@@ -151,33 +152,35 @@ function CarboniteInfo:OnInitialize()
 		return
 	end
 	Nx.idb = LibStub("AceDB-3.0"):New("NXInfo",defaults, true)
-	Nx.idb:SetProfile(Nx.db:GetCurrentProfile())
-	tinsert(Nx.dbs,Nx.idb)
-	Nx.Font:ModuleAdd("Info.InfoFont",{ "NxFontI", "GameFontNormal","idb" })	
-	Nx.Info:Init()	
+	Nx.Font:ModuleAdd("Info.InfoFont",{ "NxFontI", "GameFontNormal","idb" })
+	Nx.Info:Init()
 	CarboniteInfo:PLAYER_LOGIN()
 	local function func ()
 		Nx.Info:ToggleShow()
 	end
-	Nx.NXMiniMapBut.Menu:AddItem(0, L["Show Info Windows"], func, Nx.NXMiniMapBut)		
+	Nx.NXMiniMapBut.Menu:AddItem(0, L["Show Info Windows"], func, Nx.NXMiniMapBut)
 	CarboniteInfo:RegisterEvent("PLAYER_LOGIN")
 	tinsert(Nx.BrokerMenuTemplate,{ text = L["Toggle Info Windows"], func = function() Nx.Info:ToggleShow()end })
 end
 
 function CarboniteInfo:PLAYER_LOGIN()
 	local ch = Nx.CurCharacter
-	Nx.InfoStats["ArenaPts"] = ch["ArenaPts"]
-	Nx.InfoStats["Honor"] = ch["Honor"]
-	Nx.InfoStats["XPRest%"] = ch["XPRest"] / ch["XPMax"] * 100  
+	local _, honor = GetCurrencyInfo (392)	
+	local _, conquest = GetCurrencyInfo (390)
+	local xprest = GetXPExhaustion() or 0
+	local xpmax = UnitXPMax ("player")
+	Nx.InfoStats["ArenaPts"] = conquest	
+	Nx.InfoStats["Honor"] = honor
+	Nx.InfoStats["XPRest%"] = xprest / xpmax * 100
 end
 
 
-function Nx.Info:Init()	
+function Nx.Info:Init()
 	local info = Nx.idb.profile.InfoData
 
 	if not info or info.Version < Nx.VERSIONINFO then
 		if info then
-			Nx.prt ("Reset old info data %f", info.Version)
+			Nx.prt (L["Reset old info data %f"], info.Version)
 		end
 		info = {}
 		Nx.idb.profile.InfoData = info
@@ -243,8 +246,8 @@ function Nx.Info:Init()
 		["TMana%"] = self.CalcTargetManaPercent,
 --		["TManaChange"] = self.CalcTargetManaChange,
 		["Time"] = self.CalcTime,
-	}	
-	
+	}
+
 	local dinfo = Nx.idb.profile.InfoData
 	self:OnTimer()
 --	self:Create (1)
@@ -253,18 +256,19 @@ function Nx.Info:Init()
 
 		local info = dinfo[n]
 
-		if info then			
+		if info then
 			self:Create (n)
 		end
 	end
 
 	self:CreateMenu()
-	Nx:AddToConfig("Info Module",createOptions(),L["Info Module"])
+	Nx:AddToConfig("Info Module",createOptions(),L["Info Module"])		
 	self:OptionsUpdate()
 end
 
---------
+---------------------------------------------------------------------------------------
 -- Update all info windows
+---------------------------------------------------------------------------------------
 
 function Nx.Info:OnTimer()
 
@@ -318,9 +322,9 @@ function Nx.Info:OnTimer()
 	return .1
 end
 
---------
+---------------------------------------------------------------------------------------
 
-function Nx.Info:OptionsUpdate()	
+function Nx.Info:OptionsUpdate()
 	local lock = Nx.idb.profile.Info.Lock
 
 	for i, info in pairs (self.Infos) do
@@ -345,7 +349,7 @@ function Nx.Info:OptionsUpdate()
 	end
 end
 
---------
+---------------------------------------------------------------------------------------
 
 function Nx.Info:New()
 
@@ -363,8 +367,9 @@ function Nx.Info:New()
 	self:OptionsUpdate()
 end
 
---------
+---------------------------------------------------------------------------------------
 -- Delete the info window
+---------------------------------------------------------------------------------------
 
 function Nx.Info:Delete (index)
 
@@ -380,8 +385,9 @@ function Nx.Info:Delete (index)
 	Nx.Window:ClrSaveData ("NxInfo" .. index)
 end
 
---------
+---------------------------------------------------------------------------------------
 -- Create shared menu
+---------------------------------------------------------------------------------------
 
 function Nx.Info:CreateMenu()
 
@@ -428,8 +434,9 @@ function Nx.Info:CreateMenu()
 
 end
 
---------
+---------------------------------------------------------------------------------------
 -- Create menu
+---------------------------------------------------------------------------------------
 
 function Nx.Info:OpenMenu (info)
 
@@ -447,7 +454,7 @@ function Nx.Info:OpenMenu (info)
 	self.Menu:Open()
 end
 
---------
+---------------------------------------------------------------------------------------
 
 function Nx.Info:Menu_OnClose()
 	self.CurMenuInfo.Win:Show (false)
@@ -491,8 +498,9 @@ function Nx.Info:Menu_OnDelete (item)
 	Nx:ShowMessage (L["Delete Info Window"] .. " #" .. self.CurMenuInfo.Index .. "?", L["Delete"], func, L["Cancel"])
 end
 
---------
+---------------------------------------------------------------------------------------
 -- Create info window
+---------------------------------------------------------------------------------------
 
 function Nx.Info:Create (index)
 
@@ -501,16 +509,17 @@ function Nx.Info:Create (index)
 	local info = self.Infos[index] or {}
 
 	self.Infos[index] = info
-	
-	setmetatable (info, self)	
+
+	setmetatable (info, self)
 	self.__index = self
 
 	info:Create2 (index)
 end
 
---------
+---------------------------------------------------------------------------------------
 -- Create info window
 -- self = instance
+---------------------------------------------------------------------------------------
 
 function Nx.Info:Create2 (index)
 
@@ -520,7 +529,7 @@ function Nx.Info:Create2 (index)
 
 	self.Data = Nx.idb.profile.InfoData[index] or {}
 	Nx.idb.profile.InfoData[index] = self.Data
-	
+
 	--
 
 	local items = self.Data["Items"]
@@ -646,15 +655,17 @@ function Nx.Info:Create2 (index)
 --PAIDE!
 end
 
---------
+---------------------------------------------------------------------------------------
 -- Show or hide
+---------------------------------------------------------------------------------------
 
 --function Nx:NXInfoKeyToggleShow()
 --	Nx.Info:ToggleShow()
 --end
 
---------
+---------------------------------------------------------------------------------------
 -- Show or hide window
+---------------------------------------------------------------------------------------
 
 function Nx.Info:ToggleShow()
 
@@ -670,8 +681,9 @@ function Nx.Info:ToggleShow()
 	end
 end
 
---------
+---------------------------------------------------------------------------------------
 -- On list events
+---------------------------------------------------------------------------------------
 
 function Nx.Info:OnListEvent (eventName, sel, val2, click)
 
@@ -779,7 +791,7 @@ function Nx.Info:UpdateItems()
 					end
 
 				else
-					local cmd, v1, v2, v3, v4 = strsplit (";", cap)	-- FIX for multiple params!					
+					local cmd, v1, v2, v3, v4 = strsplit (";", cap)	-- FIX for multiple params!
 					local func = self.ItemFuncs[cmd]
 					if func then
 						color, text = func (self, v1, v2, v3, v4)
@@ -820,7 +832,7 @@ end
 
 --PAIDE!
 
---------
+---------------------------------------------------------------------------------------
 
 function Nx.Info:CalcBarHPercent (color, perName, w, h)
 
@@ -1029,11 +1041,11 @@ function Nx.Info:CalcThreatPercent (unit)
 end
 
 function Nx.Info:CalcDur()
-
-	Nx.Info.NeedDurability = true
-
-	local dur = Nx.CurCharacter["DurLowPercent"]
-
+	if not Nx.Warehouse then
+		return
+	end
+	Nx.Info.NeedDurability = true	
+	local dur = Nx.Warehouse.CurCharacter["DurLowPercent"]
 	if dur then	-- Can be nil on login
 		if dur >= 30 then
 			return "|cffa0a0a0", format ("%d", dur)
@@ -1043,8 +1055,10 @@ function Nx.Info:CalcDur()
 end
 
 function Nx.Info:CalcLvlTime()
-
-	local ch = Nx.CurCharacter
+	if not Nx.Warehouse then
+		return "|cff808080", "?"
+	end
+	local ch = Nx.Warehouse.CurCharacter
 
 	local lvl = tonumber (ch["Level"] or 0)
 
@@ -1212,7 +1226,7 @@ function Nx.Info:CalcTime (str)
 	return "|cffa0a0a0", ok and s or "?"
 end
 
---------
+---------------------------------------------------------------------------------------
 
 function Nx.Info:SetBGStartTime (secs)
 
@@ -1220,7 +1234,7 @@ function Nx.Info:SetBGStartTime (secs)
 	self.BGStartTime = GetTime()
 end
 
--------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------
 
 function Nx.Info:CreateFrame (parent)
 
@@ -1240,8 +1254,9 @@ function Nx.Info:ResetFrames()
 	frms.Next = 1
 end
 
-------
+---------------------------------------------------------------------------------------
 -- Hide extra frames
+---------------------------------------------------------------------------------------
 
 function Nx.Map:HideExtraFrames()
 
@@ -1252,9 +1267,10 @@ function Nx.Map:HideExtraFrames()
 	end
 end
 
-------
+---------------------------------------------------------------------------------------
 -- Get next available frame or create one
 -- ret: frame
+---------------------------------------------------------------------------------------
 
 function Nx.Info:GetFrame()
 
@@ -1279,11 +1295,10 @@ function Nx.Info:GetFrame()
 	return f
 end
 
--------------------------------------------------------------------------------
-
---------
+---------------------------------------------------------------------------------------
 -- Create info editor window
 -- self = instance
+---------------------------------------------------------------------------------------
 
 function Nx.Info:EditorCreate (index)
 
@@ -1343,8 +1358,9 @@ function Nx.Info:EditorCreate (index)
 --PAIDE!
 end
 
---------
+---------------------------------------------------------------------------------------
 -- On list events
+---------------------------------------------------------------------------------------
 
 function Nx.Info:EditorOnListEvent (eventName, sel, val2, click)
 
@@ -1391,9 +1407,9 @@ function Nx:OnChat_msg_bg_system_neutral (event, arg1, arg2, arg3)
 		end
 
 		if not secs then
-			s1, s2, secs = strfind (arg1, " begins? in (%d+) ")
+			s1, s2, secs = strfind (arg1, L[" begins? in (%d+) "])
 			if not secs then
-				s1, s2, secs = strfind (arg1, "(%d+) minutes? until the battle")
+				s1, s2, secs = strfind (arg1, L["(%d+) minutes? until the battle"])
 			end
 		end
 
@@ -1410,19 +1426,5 @@ function Nx:OnChat_msg_bg_system_neutral (event, arg1, arg2, arg3)
 	end
 end
 
--------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------
 -- EOF
-
-
-
-
-
-
-
-
-
-
-
-
-
-

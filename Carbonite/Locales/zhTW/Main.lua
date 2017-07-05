@@ -2,7 +2,7 @@ if ( GetLocale() ~= "zhTW" ) then
 	return;
 end
 
-local L = LibStub("AceLocale-3.0"):NewLocale("Carbonite", "zhTW", true)
+local L = LibStub("AceLocale-3.0"):NewLocale("Carbonite", "zhTW")
 if not L then return end
 
 NXClassLocToCap = {		-- Convert localized class name to generic caps
@@ -16,7 +16,7 @@ NXClassLocToCap = {		-- Convert localized class name to generic caps
 	["盜賊"] = "ROGUE",
 	["薩滿"] = "SHAMAN",
 	["術士"] = "WARLOCK",
-	["戰士"] = "WARRIOR",	
+	["戰士"] = "WARRIOR",
 }
 
 -- Main Carbonite
@@ -112,11 +112,54 @@ L["Scale"] = true
 L["Transparency"] = true
 L["Reset Layout"] = true
 
+-- UI Tooltips
+L["Close/Menu"] = true
+L["Close/Unlock"] = true
+L["Pick Color"] = true
+L["Unlock"] = true
+L["Maximize"] = true
+L["Restore"] = true
+L["Minimize"] = true
+L["Auto Scale"] = true
+
 -- Stuff from old localization
-L["Searching for Artifacts"] = true 		-- NXlARTIFACTS
-L["Extract Gas"] = "氣體微粒"						-- NXlEXTRACTGAS
-L["Herb Gathering"] = "草點"					-- NXlHERBGATHERING
-L["In Conflict"] = "戰鬥中"						-- NXlINCONFLICT
-L["Opening"] = "開啟"							-- NXlOpening	
-L["Opening - No Text"] = "開啟 - 無文字"				-- NXlOpeningNoText
-L["Everfrost Chip"] = "永霜屑片"					-- NXlEverfrost
+L["Searching for Artifacts"] = true			-- NXlARTIFACTS
+L["Extract Gas"] = "氣體微粒"				-- NXlEXTRACTGAS
+L["Herb Gathering"] = "草點"				-- NXlHERBGATHERING
+L["In Conflict"] = "戰鬥中"				-- NXlINCONFLICT
+L["Opening"] = "開啟"					-- NXlOpening
+L["Opening - No Text"] = "開啟 - 無文字"		-- NXlOpeningNoText
+L["Everfrost Chip"] = "永霜屑片"			-- NXlEverfrost
+
+L["yds"] = "碼"
+L["secs"] = "秒"
+L["mins"] = "分鍾"
+
+-- NxUI.lua
+L[" Frame: %s Shown%d Vis%d P>%s"] = true
+L[" EScale %f, Lvl %f"] = true
+L[" LR %f, %f"] = true
+L[" BT %f, %f"] = true
+L["%s#%d %s ID%s (%s) show%d l%d x%d y%d"] = true
+L["%.1f days"] = true
+L["%.1f hours"] = true
+L["%d mins"] = true
+L["Reset old layout data"] = true
+L["Window version mismatch!"] = true
+L["XY missing (%s)"] = true
+L["Window not found (%s)"] = true
+L["Detach %s"] = true
+L["Detach found %s"] = true
+L["Search: [click]"] = true
+L["Search: %[click%]"] = true
+L["Reset old list data"] = true
+L["!BUT %s"] = true
+L["Key %s transfered to Watch List Item"] = true
+L["CLICK (.+):"] = true
+L["Key %s %s #%s %s"] = true
+L["shift left/right click to change size"] = true
+L["Reset old tool bar data"] = true
+
+-- NxTravel.lua
+L["Connection: %s to %s"] = true
+L["Fly: %s to %s"] = true

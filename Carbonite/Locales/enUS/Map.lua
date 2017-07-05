@@ -1,4 +1,4 @@
-local L = LibStub("AceLocale-3.0"):NewLocale("Carbonite", "enUS", true)
+local L = LibStub("AceLocale-3.0"):NewLocale("Carbonite", "enUS", true, true)
 if not L then return end
 L["None"] = true
 L["Goto"] = true
@@ -26,6 +26,7 @@ L["Show Artifact Locations"] = true
 L["Show Guide POIs"] = true
 L["Show Custom Icons"] = true
 L["Show Archaeology Blobs"] = true
+L["Show World Quests"] = true
 L["Show Quest Blobs"] = true
 L["Show Unexplored Areas"] = true
 L["Show World"] = true

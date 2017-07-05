@@ -2,9 +2,8 @@ if ( GetLocale() ~= "zhTW" ) then
 	return;
 end
 
-local L = LibStub("AceLocale-3.0"):NewLocale("Carbonite", "zhTW", true)
+local L = LibStub("AceLocale-3.0"):NewLocale("Carbonite", "zhTW")
 if not L then return end
-
 L["None"] = true
 L["Goto"] = true
 L["Clear Goto"] = true
@@ -30,6 +29,7 @@ L["Show Mining Locations"] = true
 L["Show Artifact Locations"] = true
 L["Show Guide POIs"] = true
 L["Show Custom Icons"] = true
+L["Show World Quests"] = true
 L["Show Archaeology Blobs"] = true
 L["Show Quest Blobs"] = true
 L["Show Unexplored Areas"] = true

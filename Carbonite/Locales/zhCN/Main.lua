@@ -1,4 +1,8 @@
-local L = LibStub("AceLocale-3.0"):NewLocale("Carbonite", "zhCN", true)
+if ( GetLocale() ~= "zhCN" ) then
+	return
+end
+
+local L = LibStub("AceLocale-3.0"):NewLocale("Carbonite", "zhCN")
 if not L then return end
 
 NXClassLocToCap = {		-- Convert localized class name to generic caps
@@ -12,7 +16,7 @@ NXClassLocToCap = {		-- Convert localized class name to generic caps
 	["潜行者"] = "ROGUE",
 	["萨满祭司"] = "SHAMAN",
 	["术士"] = "WARLOCK",
-	["战士"] = "WARRIOR",	
+	["战士"] = "WARRIOR",
 }
 
 -- Main Carbonite
@@ -20,13 +24,13 @@ L["Carbonite"] = true
 L["CARBONITE"] = true
 L["Loading"] = "载入中"
 L["Loading Done"] = "载入完成"
-L["None"] = "无"
+L["None"] = true
 L["Goto"] = "前往"
 L["Show Player Zone"] = "显示玩家区域"
 L["Menu"] = "菜单"
 L["Show Selected Zone"] = "显示选择区域"
 L["Add Note"] = "添加标记"
-L["TopRight"] = "右上角"
+L["TopRight"] = true
 L["Help"] = "帮助"
 L["Options"] = "选项"
 L["Toggle Map"] = "切换地图显示"
@@ -59,7 +63,7 @@ L["Missing character data!"] = "角色数据丢失！"
 L["Deathknight"] = "死亡骑士"
 L["Death Knight"] = "死亡骑士"
 L["Version"] = "版本"
-L["Maintained by"] = "维护："
+L["Maintained by"] = "维护:"
 L["crit"] = "暴击"
 L["hit"] = "击中"
 L["Killed"] = "杀死"
@@ -108,11 +112,54 @@ L["Scale"] = "缩放"
 L["Transparency"] = "透明度"
 L["Reset Layout"] = "重设布局"
 
+-- UI Tooltips
+L["Close/Menu"] = "关闭/菜单"
+L["Close/Unlock"] = "关闭/解锁"
+L["Pick Color"] = "选取颜色"
+L["Unlock"] = "解锁"
+L["Maximize"] = "最大化"
+L["Restore"] = "恢复"
+L["Minimize"] = "最小化"
+L["Auto Scale"] = "自动缩放"
+
 -- Stuff from old localization
-L["Searching for Artifacts"] = "寻找考古点" 		-- NXlARTIFACTS
-L["Extract Gas"] = "精炼气体"						-- NXlEXTRACTGAS
-L["Herb Gathering"] = "草药采集"					-- NXlHERBGATHERING
-L["In Conflict"] = "争夺中"						-- NXlINCONFLICT
-L["Opening"] = "打开"							-- NXlOpening	
+L["Searching for Artifacts"] = "寻找考古点"		-- NXlARTIFACTS
+L["Extract Gas"] = "精炼气体"				-- NXlEXTRACTGAS
+L["Herb Gathering"] = "草药采集"			-- NXlHERBGATHERING
+L["In Conflict"] = "争夺中"				-- NXlINCONFLICT
+L["Opening"] = "打开"					-- NXlOpening
 L["Opening - No Text"] = true				-- NXlOpeningNoText
-L["Everfrost Chip"] = "永冻薄片"					-- NXlEverfrost
+L["Everfrost Chip"] = "永冻薄片"			-- NXlEverfrost
+
+L["yds"] = "码"
+L["secs"] = "秒"
+L["mins"] = "分钟"
+
+-- NxUI.lua
+L[" Frame: %s Shown%d Vis%d P>%s"] = true
+L[" EScale %f, Lvl %f"] = true
+L[" LR %f, %f"] = true
+L[" BT %f, %f"] = true
+L["%s#%d %s ID%s (%s) show%d l%d x%d y%d"] = true
+L["%.1f days"] = "%.1f 天"
+L["%.1f hours"] = "%.1f 小时"
+L["%d mins"] = "%d 分钟"
+L["Reset old layout data"] = "重置旧布局数据"
+L["Window version mismatch!"] = "窗口版本错误！"
+L["XY missing (%s)"] = "丢失XY坐标(%s)"
+L["Window not found (%s)"] = "未找到窗口(%s)"
+L["Detach %s"] = "分离 %s"
+L["Detach found %s"] = "找到待分离窗口 %s"
+L["Search: [click]"] = "搜索：[点击此处]"
+L["Search: %[click%]"] = "搜索：%[点击此处%]"
+L["Reset old list data"] = "重置旧列表数据"
+L["!BUT %s"] = true
+L["Key %s transfered to Watch List Item"] = "键 %s 已转移到监视列表"
+L["CLICK (.+):"] = true
+L["Key %s %s #%s %s"] = "键 %s %s #%s %s"
+L["shift left/right click to change size"] = "Shift-左键或右键点击改变大小"
+L["Reset old tool bar data"] = "重置旧工具栏数据"
+
+-- NxTravel.lua
+L["Connection: %s to %s"] = "连接：%s 到 %s"
+L["Fly: %s to %s"] = "飞行：%s 到 %s"

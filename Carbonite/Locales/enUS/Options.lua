@@ -1,4 +1,4 @@
-local L = LibStub("AceLocale-3.0"):NewLocale("Carbonite", "enUS", true)
+local L = LibStub("AceLocale-3.0"):NewLocale("Carbonite", "enUS", true, true)
 if not L then return end
 
 -- Profiles Menu
@@ -27,7 +27,17 @@ L["Website"] = true
 L["For support, please visit the forums for Carbonite on WoW Interface."] = true
 L["Special thanks to"] = true
 L["Cirax for Carbonite2 Logo"] = true
-L["JimboBlue for guide location updates and checking"] = true
+L["ircdirk & atl77 for Quest Database updates"] = true
+L["Naharis for quest watchlist fixes"] = true
+L["nelegalno for many cleanups, api fixes"] = true
+L["JimJoBlue for guide location updates"] = true
+L["Localization Efforts By:"] = true
+L["frFR - powerstrk"] = true
+L["deDE - atl77 & samyonair"] = true
+L["itIT - ThorwaldOdin"] = true
+L["ruRU - NotDead"] = true
+L["zhCN - Raka-loah"] = true
+L["zhTW - kc305chen"] = true
 
 -- Battlegrounds Menu
 L["Battlegrounds"] = true
@@ -53,8 +63,12 @@ L["Attempts to hide the two gryphons on your action bar."] = true
 L["Map Options"] = true
 L["Use Carbonite Map instead of Blizzards (Alt-M will open world map)"] = true
 L["When enabled, pressing 'M' will maximize the carbonite map instead of opening the world map."] = true
-L["Enable Compatability Mode"] = true
-L["When Enabled, Carbonite will performe combat checks before any map/window functions. This eliminates other UI's from causing protected mode errors."] = true
+L["Enable Combat Compatibility Mode"] = true
+L["Take Map Function Control"] = true
+L["When enabled Carbonite takes control of 2 blizzard map functions to help prevent map flickers, and unneccsary lag causing calls to change the map."] = true
+L["Hide Map In Combat"] = true
+L["If large map is open when you enter combat attempts to hide it."] = true
+L["When Enabled, Carbonite will perform combat checks before any map/window functions. This eliminates other UI's from causing protected mode errors."] = true
 L["Center map when maximizing"] = true
 L["When enabled, the map will center on your current zone when you maximize it"] = true
 L["Ignore mouse on map except when ALT is pressed"] = true
@@ -75,8 +89,6 @@ L["Restore map scale after track"] = true
 L["When enabled, restores your previous map scale when tracking is cleared."] = true
 L["Use Travel Routing"] = true
 L["When enabled, attempts to route your travel when destination is in another zone."] = true
-L["Restore map scale after track"] = true
-L["When enabled, restores your previous map scale when tracking is cleared."] = true
 L["Show Movement Trail"] = true
 L["When enabled, draws a trail on the map to show your movements."] = true
 L["Movement trail distance"] = true
@@ -122,7 +134,7 @@ L["Middle Click"] = true
 L["Sets the action performed when clicking your middle mouse button"] = true
 L["Alt Middle Click"] = true
 L["Sets the action performed when middle clicking holding ALT"] = true
-L["Ctrl Left Click"] = true
+L["Ctrl Middle Click"] = true
 L["Sets the action performed when middle clicking holding CTRL"] = true
 L["Right Click"] = true
 L["Sets the action performed when right clicking the map"] = true
@@ -255,6 +267,17 @@ L["Herbalism"] = true
 L["Display"] = true
 L["Nodes On Map"] = true
 L["Mining"] = true
+L["Timber"] = true
+L["Delete Timber Gather Locations"] = true
+L["Small Timber"] = true
+L["Medium Timber"] = true
+L["Large Timber"] = true
+L["Show Timber Locations"] = true
+L["Lumbermill"] = true
+L["Delete"] = true
+L["Import"] = true
+L["Cancel"] = true
+
 
 -- Menu Options
 L["Menu Options"] = true
@@ -336,9 +359,6 @@ L["Reload UI"] = true
 L["Reset options"] = true
 L["Reset global options"] = true
 L["Reset window layouts"] = true
-L["Delete Herb Locations"] = true
-L["Delete Mine Locations"] = true
-L["Delete Misc Locations"] = true
 L["Import Herbs"] = true
 L["Import Mining"] = true
 L["Import Misc"] = true

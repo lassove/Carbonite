@@ -2,16 +2,10 @@ if ( GetLocale() ~= "esES" ) then
 	return;
 end
 
-local L = LibStub("AceLocale-3.0"):NewLocale("Carbonite", "esES", true)
+local L = LibStub("AceLocale-3.0"):NewLocale("Carbonite", "esES")
 if not L then return end
 
 -- Main Guide
-L["Kalimdor"] = true
-L["Eastern Kingdoms"] = true
-L["Outlands"] = true
-L["Northrend"] = true
-L["The Maelstrom"] = true
-L["Pandaria"] = true
 L["All"] = true
 L["Quest Givers"] = true
 L["Stable Master"] = true
@@ -20,7 +14,6 @@ L["Common Place"] = true
 L["Auctioneer"] = true
 L["Banker"] = true
 L["Innkeeper"] = true
-L["Arcane Reforger"] = true
 L["Void Storage"] = true
 L["Transmogrifier"] = true
 L["Battle Pet Trainer"] = true
@@ -74,7 +67,6 @@ L["Alchemy Lab"] = true
 L["Altar Of Shadows"] = true
 L["Mana Loom"] = true
 L["Moonwell"] = true
-L["Quest Givers"] = true
 
 -- Menus
 L["Delete"] = true

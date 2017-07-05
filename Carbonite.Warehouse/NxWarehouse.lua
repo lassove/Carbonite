@@ -23,8 +23,7 @@
 -------------------------------------------------------------------------------
 -------------------------------------------------------------------------------
 -- Tables
-
---------
+-------------------------------------------------------------------------------
 
 local _G = getfenv(0)
 
@@ -32,7 +31,14 @@ CarboniteWarehouse = LibStub("AceAddon-3.0"):NewAddon("CarboniteWarehouse","AceE
 
 local L = LibStub("AceLocale-3.0"):GetLocale("Carbonite.Warehouse", true)
 
+local GuildBank = LibStub("LibGuildBankComm-1.0")
+
 Nx.VERSIONWare			= .15				-- Warehouse data
+
+-- Keybindings
+BINDING_HEADER_CarboniteWarehouse = "|cffc0c0ff" .. L["Carbonite Warehouse"] .. "|r"
+BINDING_NAME_NxTOGGLEWAREHOUSE	= L["NxTOGGLEWAREHOUSE"]
+
 
 local defaults = {
 	profile = {
@@ -41,7 +47,35 @@ local defaults = {
 			WarehouseFontSize = 11,
 			WarehouseFontSpacing = 6,
 			Enable = true,
+			SellTesting = false,
+			SellVerbose = false,
+			SellGreys = false,
+			SellWhites = false,
+			SellWhitesiLVL = false,
+			SellWhitesiLVLValue = 600,
+			SellGreens = false,
+			SellGreensBOP = false,
+			SellGreensBOE = false,
+			SellGreensiLVL = false,
+			SellGreensiLVLValue = 600,			
+			SellBlues = false,
+			SellBluesiLVL = false,
+			SellBluesiLVLValue = 600,			
+			SellBluesBOP = false,
+			SellBluesBOE = false,
+			SellPurps = false,
+			SellPurpsiLVL = false,
+			SellPurpsiLVLValue = 600,			
+			SellPurpsBOP = false,
+			SellPurpsBOE = false,
+			SellList = false,
+			SellingList = {},
+			RepairAuto = false,
+			RepairGuild = false,
 			AddTooltip = true,
+			TooltipIgnore = true,
+			IgnoreList = {["Hearthstone"]="Hearthstone",["Garrison Hearthstone"]="Garrison Hearthstone",["Admiral's Compass"]="Adminral's Compass"},			
+			ShowGold = false,
 		},
 	},
 }
@@ -51,83 +85,676 @@ Nx.Warehouse = {}
 local warehouseopts
 local function WarehouseOptions()
 	if not warehouseopts then
-		warehouseopts = {
+		warehouseopts = {					
 			type = "group",
-			name = "Warehouse Options",
-			args = {	
-				toolTip = {
+			name = L["Warehouse Options"],
+			childGroups = "tab",
+			args = {
+				main = {
 					order = 1,
-					type = "toggle",
-					width = "full",
-					name = "Add Warehouse Tooltip",
-					desc = "When enabled, will show warehouse information in hover tooltips of items",
-					get = function()
-						return Nx.wdb.profile.Warehouse.AddTooltip
-					end,
-					set = function()
-						Nx.wdb.profile.Warehouse.AddTooltip = not Nx.wdb.profile.Warehouse.AddTooltip
-					end,				
+					name = L["Warehouse"],
+					type = "group",
+					args = {
+						toolTip = {
+							order = 1,
+							type = "toggle",
+							width = "full",
+							name = L["Add Warehouse Tooltip"],
+							desc = L["When enabled, will show warehouse information in hover tooltips of items"],
+							get = function()
+								return Nx.wdb.profile.Warehouse.AddTooltip
+							end,
+							set = function()
+								Nx.wdb.profile.Warehouse.AddTooltip = not Nx.wdb.profile.Warehouse.AddTooltip
+							end,
+						},
+						showGold = {
+							order = 2,
+							type = "toggle",
+							width = "full",
+							name = L["Show coin count in warehouse list"],
+							desc = L["Restores the coin totals after character names in warehouse listing"],
+							get = function()
+								return Nx.wdb.profile.Warehouse.ShowGold
+							end,
+							set = function()
+								Nx.wdb.profile.Warehouse.ShowGold = not Nx.wdb.profile.Warehouse.ShowGold
+							end,						
+						},
+						tiphidelist = {
+							order = 3,
+							name = L["Use don't display list"],
+							desc = L["If enabled, don't show listed items in tooltips"],
+							type = "toggle",
+							width = "full",
+							descStyle = "inline",
+							get = function()
+								return Nx.wdb.profile.Warehouse.TooltipIgnore
+							end,
+							set = function()
+								Nx.wdb.profile.Warehouse.TooltipIgnore = not Nx.wdb.profile.Warehouse.TooltipIgnore
+							end,									
+						},
+						hidenew = {
+							order = 4,
+							type = "input",
+							name = L["New Item To Ignore (Case Insensative)"],
+							desc = L["Enter the name of the item you want to not track in tooltips. You can drag and drop an item from your inventory aswell."],
+							width = "full",
+							disabled = function()
+								return not Nx.wdb.profile.Warehouse.TooltipIgnore
+							end,
+							get = false,
+							set = function (info, value)
+								local name = GetItemInfo(value)
+								name = name or value
+								StaticPopupDialogs["NX_AddIgnore"] = {
+									text = L["Ignore"] .. " " .. value .. "?",
+									button1 = L["Yes"],
+									button2 = L["No"],											
+									OnAccept = function()
+										Nx.wdb.profile.Warehouse.IgnoreList[name] = name
+										LibStub("AceConfigRegistry-3.0"):NotifyChange("Carbonite")
+									end,
+									hideOnEscape = true,
+									whileDead = true,
+								}
+								local dlg = StaticPopup_Show("NX_AddIgnore")
+							end,
+						},
+						hidedelete = {
+							order = 5,
+							type = "select",									
+							style = "radio",
+							name = L["Delete Item"],
+							disabled = function()
+								return not Nx.wdb.profile.Warehouse.TooltipIgnore
+							end,
+							get = false,
+							values = Nx.wdb.profile.Warehouse.IgnoreList,
+							set = function(info, value)
+								StaticPopupDialogs["NX_DelIgnore"] = {
+									text = L["Delete"] .. " " .. value .. "?",
+									button1 = L["Yes"],
+									button2 = L["No"],
+									OnAccept = function()
+										Nx.wdb.profile.Warehouse.IgnoreList[value] = nil
+										LibStub("AceConfigRegistry-3.0"):NotifyChange("Carbonite")
+									end,
+									hideOnEscape = true,
+									whileDead = true,
+								}
+								local dlg = StaticPopup_Show("NX_DelIgnore")
+							end,
+						},						
+						WareFont = {
+							order = 6,
+							type	= "select",
+							name	= L["Warehouse Font"],
+							desc	= L["Sets the font to be used for warehouse windows"],
+							get	= function()
+								local vals = Nx.Opts:CalcChoices("FontFace","Get")
+								for a,b in pairs(vals) do
+								  if (b == Nx.wdb.profile.Warehouse.WarehouseFont) then
+									 return a
+								  end
+								end
+								return ""
+							end,
+							set	= function(info, name)
+								local vals = Nx.Opts:CalcChoices("FontFace","Get")
+								Nx.wdb.profile.Warehouse.WarehouseFont = vals[name]
+								Nx.Opts:NXCmdFontChange()
+							end,
+							values	= function()
+								return Nx.Opts:CalcChoices("FontFace","Get")
+							end,
+						},
+						WareFontSize = {
+							order = 7,
+							type = "range",
+							name = L["Warehouse Font Size"],
+							desc = L["Sets the size of the warehouse font"],
+							min = 6,
+							max = 14,
+							step = 1,
+							bigStep = 1,
+							get = function()
+								return Nx.wdb.profile.Warehouse.WarehouseFontSize
+							end,
+							set = function(info,value)
+								Nx.wdb.profile.Warehouse.WarehouseFontSize = value
+								Nx.Opts:NXCmdFontChange()
+							end,
+						},
+						WareFontSpacing = {
+							order = 8,
+							type = "range",
+							name = L["Warehouse Font Spacing"],
+							desc = L["Sets the spacing of the warehouse font"],
+							min = -10,
+							max = 20,
+							step = 1,
+							bigStep = 1,
+							get = function()
+								return Nx.wdb.profile.Warehouse.WarehouseFontSpacing
+							end,
+							set = function(info,value)
+								Nx.wdb.profile.Warehouse.WarehouseFontSpacing = value
+								Nx.Opts:NXCmdFontChange()
+							end,
+						},						
+					},
 				},
-				WareFont = {
+				seller = {
+					order = 2,
+					name = L["Auto Sell"],
+					type = "group",
+					args = {
+						sellopts = {
+							order = 1,
+							name = " ",
+							type = "group",							
+							guiInline = true,
+							args = {
+								enabletest = {							
+									order = 1,
+									type = "toggle",
+									width = "full",									
+									name = L["Test Selling"],
+									desc = L["Enabling this allows you to see what would get sold, without actually selling."],
+									descStyle = "inline",
+									get = function()
+										return Nx.wdb.profile.Warehouse.SellTesting
+									end,
+									set = function()
+										Nx.wdb.profile.Warehouse.SellTesting = not Nx.wdb.profile.Warehouse.SellTesting
+									end,
+								},								
+								enableverb = {							
+									order = 2,
+									type = "toggle",
+									width = "full",									
+									name = L["Verbose Selling"],
+									desc = L["When enabled shows what items got sold instead of just the grand total earned."],
+									descStyle = "inline",
+									get = function()
+										return Nx.wdb.profile.Warehouse.SellVerbose
+									end,
+									set = function()
+										Nx.wdb.profile.Warehouse.SellVerbose = not Nx.wdb.profile.Warehouse.SellVerbose
+									end,
+								},																
+							},
+						},					
+						greys = {
+							order = 2,
+							name = " ",
+							type = "group",							
+							guiInline = true,
+							args = {
+								sellgreys = {							
+									order = 1,
+									type = "toggle",
+									width = "full",									
+									name = L["Auto Sell"] .. " |cff777777" .. L["Grey"] .. "|r " .. L["Items"],
+									desc = L["When you open a merchant, will auto sell your grey items"],
+									descStyle = "inline",
+									get = function()
+										return Nx.wdb.profile.Warehouse.SellGreys
+									end,
+									set = function()
+										Nx.wdb.profile.Warehouse.SellGreys = not Nx.wdb.profile.Warehouse.SellGreys
+									end,
+								},								
+							},
+						},
+						whites = {
+							order = 3,
+							name = " ",
+							type = "group",
+							guiInline = true,
+							args = {
+								sellwhites = {							
+									order = 1,
+									type = "toggle",
+									width = "full",									
+									name = L["Auto Sell"] .. " |cffffffff" .. L["White"] .. "|r " .. L["Items"],
+									desc = L["When you open a merchant, will auto sell your white items."],
+									descStyle = "inline",
+									get = function()
+										return Nx.wdb.profile.Warehouse.SellWhites
+									end,
+									set = function()
+										Nx.wdb.profile.Warehouse.SellWhites = not Nx.wdb.profile.Warehouse.SellWhites
+									end,
+								},					
+								whiteilvl = {
+									order = 2,
+									type = "toggle",
+									width = "full",
+									name = L["Enable iLevel Limit"],
+									desc = L["Only sells items that are under the item level specified"],
+									disabled = function()
+										return not Nx.wdb.profile.Warehouse.SellWhites
+									end,
+									get = function()
+										return Nx.wdb.profile.Warehouse.SellWhitesiLVL
+									end,
+									set = function()
+										Nx.wdb.profile.Warehouse.SellWhitesiLVL = not Nx.wdb.profile.Warehouse.SellWhitesiLVL
+									end,									
+								},
+								whitevalue = {
+									order = 3,
+									type = "range",
+									width = "full",
+									name = L["iLevel"],
+									desc = L["Sets the maximum item level which will be auto sold"],
+									min = 0,
+									max = 1000,
+									step = 1,
+									bigStep = 5,
+									disabled = function()
+										return not Nx.wdb.profile.Warehouse.SellWhites or not Nx.wdb.profile.Warehouse.SellWhitesiLVL
+									end,
+									get = function()
+										return Nx.wdb.profile.Warehouse.SellWhitesiLVLValue
+									end,
+									set = function(info, value)
+										Nx.wdb.profile.Warehouse.SellWhitesiLVLValue = value
+									end,
+								},
+							},						
+						},
+						greens = {
+							order = 4,
+							name = " ",
+							type = "group",
+							guiInline = true,
+							args = {
+								sellgreens = {							
+									order = 1,
+									type = "toggle",
+									width = "full",									
+									name = L["Auto Sell"] .. " |cff00ff00" .. L["Green"] .. "|r " .. L["Items"],
+									desc = L["When you open a merchant, will auto sell your green items."],
+									descStyle = "inline",
+									get = function()
+										return Nx.wdb.profile.Warehouse.SellGreens
+									end,
+									set = function()
+										Nx.wdb.profile.Warehouse.SellGreens = not Nx.wdb.profile.Warehouse.SellGreens
+									end,
+								},
+								greepbop = {
+									order = 2,
+									type = "toggle",
+									width = "double",
+									name = L["Sell BOP Items"],
+									desc = L["When enabled will sell items that are BOP"],
+									disabled = function()
+										return not Nx.wdb.profile.Warehouse.SellGreens
+									end,
+									get = function()
+										return Nx.wdb.profile.Warehouse.SellGreensBOP
+									end,
+									set = function()
+										Nx.wdb.profile.Warehouse.SellGreensBOP = not Nx.wdb.profile.Warehouse.SellGreensBOP
+									end,
+								},
+								greenboe = {
+									order = 3,
+									type = "toggle",
+									width = "double",
+									name = L["Sell BOE Items"],
+									desc = L["When enabled will sell items that are BOE"],
+									disabled = function()
+										return not Nx.wdb.profile.Warehouse.SellGreens
+									end,
+									get = function()
+										return Nx.wdb.profile.Warehouse.SellGreensBOE
+									end,
+									set = function()
+										Nx.wdb.profile.Warehouse.SellGreensBOE = not Nx.wdb.profile.Warehouse.SellGreensBOE
+									end,								
+								},
+								greenilvl = {
+									order = 4,
+									type = "toggle",
+									width = "full",
+									name = L["Enable iLevel Limit"],
+									desc = L["Only sells items that are under the item level specified"],
+									disabled = function()
+										return not Nx.wdb.profile.Warehouse.SellGreens
+									end,
+									get = function()
+										return Nx.wdb.profile.Warehouse.SellGreensiLVL
+									end,
+									set = function()
+										Nx.wdb.profile.Warehouse.SellGreensiLVL = not Nx.wdb.profile.Warehouse.SellGreensiLVL
+									end,									
+								},
+								greenvalue = {
+									order = 5,
+									type = "range",
+									width = "full",
+									name = L["iLevel"],
+									desc = L["Sets the maximum item level which will be auto sold"],
+									min = 0,
+									max = 1000,
+									step = 1,
+									bigStep = 5,
+									disabled = function()
+										return not Nx.wdb.profile.Warehouse.SellGreens or not Nx.wdb.profile.Warehouse.SellGreensiLVL
+									end,
+									get = function()
+										return Nx.wdb.profile.Warehouse.SellGreensiLVLValue
+									end,
+									set = function(info, value)
+										Nx.wdb.profile.Warehouse.SellGreensiLVLValue = value
+									end,
+								},
+							},
+						},
+						blues = {
+							order = 5,
+							name = " ",
+							type = "group",
+							guiInline = true,
+							args = {
+								sellblues = {							
+									order = 1,
+									type = "toggle",
+									width = "full",									
+									name = L["Auto Sell"] .. " |cff3333ff" .. L["Blue"] .. "|r " .. L["Items"],
+									desc = L["When you open a merchant, will auto sell your blue items."],
+									descStyle = "inline",
+									get = function()
+										return Nx.wdb.profile.Warehouse.SellBlues
+									end,
+									set = function()
+										Nx.wdb.profile.Warehouse.SellBlues = not Nx.wdb.profile.Warehouse.SellBlues
+									end,
+								},
+								bluebop = {
+									order = 2,
+									type = "toggle",
+									width = "double",
+									name = L["Sell BOP Items"],
+									desc = L["When enabled will sell items that are BOP"],
+									disabled = function()
+										return not Nx.wdb.profile.Warehouse.SellBlues
+									end,
+									get = function()
+										return Nx.wdb.profile.Warehouse.SellBluesBOP
+									end,
+									set = function()
+										Nx.wdb.profile.Warehouse.SellBluesBOP = not Nx.wdb.profile.Warehouse.SellBluesBOP
+									end,
+								},
+								blueboe = {
+									order = 3,
+									type = "toggle",
+									width = "double",
+									name = L["Sell BOE Items"],
+									desc = L["When enabled will sell items that are BOE"],
+									disabled = function()
+										return not Nx.wdb.profile.Warehouse.SellBlues
+									end,
+									get = function()
+										return Nx.wdb.profile.Warehouse.SellBluesBOE
+									end,
+									set = function()
+										Nx.wdb.profile.Warehouse.SellBluesBOE = not Nx.wdb.profile.Warehouse.SellBluesBOE
+									end,								
+								},
+								blueilvl = {
+									order = 4,
+									type = "toggle",
+									width = "full",
+									name = L["Enable iLevel Limit"],
+									desc = L["Only sells items that are under the item level specified"],
+									disabled = function()
+										return not Nx.wdb.profile.Warehouse.SellBlues
+									end,
+									get = function()
+										return Nx.wdb.profile.Warehouse.SellBluesiLVL
+									end,
+									set = function()
+										Nx.wdb.profile.Warehouse.SellBluesiLVL = not Nx.wdb.profile.Warehouse.SellBluesiLVL
+									end,									
+								},
+								bluevalue = {
+									order = 5,
+									type = "range",
+									width = "full",
+									name = L["iLevel"],
+									desc = L["Sets the maximum item level which will be auto sold"],
+									min = 0,
+									max = 1000,
+									step = 1,
+									bigStep = 5,
+									disabled = function()
+										return not Nx.wdb.profile.Warehouse.SellBlues or not Nx.wdb.profile.Warehouse.SellBluesiLVL
+									end,
+									get = function()
+										return Nx.wdb.profile.Warehouse.SellBluesiLVLValue
+									end,
+									set = function(info, value)
+										Nx.wdb.profile.Warehouse.SellBluesiLVLValue = value
+									end,
+								},
+							},						
+						},												
+						purps = {
+							order = 6,
+							name = " ",
+							type = "group",
+							guiInline = true,
+							args = {
+								sellpurps = {							
+									order = 1,
+									type = "toggle",
+									width = "full",									
+									name = L["Auto Sell"] .. " |cffff00ff" .. L["Purple"] .. "|r " .. L["Items"],
+									desc = L["When you open a merchant, will auto sell your purple items."],
+									descStyle = "inline",
+									get = function()
+										return Nx.wdb.profile.Warehouse.SellPurps
+									end,
+									set = function()
+										Nx.wdb.profile.Warehouse.SellPurps = not Nx.wdb.profile.Warehouse.SellPurps
+									end,
+								},
+								purpbop = {
+									order = 2,
+									type = "toggle",
+									width = "double",
+									name = L["Sell BOP Items"],
+									desc = L["When enabled will sell items that are BOP"],
+									disabled = function()
+										return not Nx.wdb.profile.Warehouse.SellPurps
+									end,
+									get = function()
+										return Nx.wdb.profile.Warehouse.SellPurpsBOP
+									end,
+									set = function()
+										Nx.wdb.profile.Warehouse.SellPurpsBOP = not Nx.wdb.profile.Warehouse.SellPurpsBOP
+									end,
+								},
+								purpboe = {
+									order = 3,
+									type = "toggle",
+									width = "double",
+									name = L["Sell BOE Items"],
+									desc = L["When enabled will sell items that are BOE"],
+									disabled = function()
+										return not Nx.wdb.profile.Warehouse.SellPurps
+									end,
+									get = function()
+										return Nx.wdb.profile.Warehouse.SellPurpsBOE
+									end,
+									set = function()
+										Nx.wdb.profile.Warehouse.SellPurpsBOE = not Nx.wdb.profile.Warehouse.SellPurpsBOE
+									end,								
+								},
+								purpilvl = {
+									order = 4,
+									type = "toggle",
+									width = "full",
+									name = L["Enable iLevel Limit"],
+									desc = L["Only sells items that are under the item level specified"],
+									disabled = function()
+										return not Nx.wdb.profile.Warehouse.SellPurps
+									end,
+									get = function()
+										return Nx.wdb.profile.Warehouse.SellPurpsiLVL
+									end,
+									set = function()
+										Nx.wdb.profile.Warehouse.SellPurpsiLVL = not Nx.wdb.profile.Warehouse.SellPurpsiLVL
+									end,									
+								},
+								purpvalue = {
+									order = 5,
+									type = "range",
+									width = "full",
+									name = L["iLevel"],
+									desc = L["Sets the maximum item level which will be auto sold"],
+									min = 0,
+									max = 1000,
+									step = 1,
+									bigStep = 5,
+									disabled = function()
+										return not Nx.wdb.profile.Warehouse.SellPurps or not Nx.wdb.profile.Warehouse.SellPurpsiLVL
+									end,
+									get = function()
+										return Nx.wdb.profile.Warehouse.SellPurpsiLVLValue
+									end,
+									set = function(info, value)
+										Nx.wdb.profile.Warehouse.SellPurpsiLVLValue = value
+									end,
+								},
+							},						
+						},
+						list = {
+							order = 7,
+							name = " ",
+							type = "group",
+							guiInline = true,
+							args = {
+								selllist = {
+									order = 1,
+									name = L["Sell items based on a list"],
+									desc = L["If item name matches one on the list, auto-sell it"],
+									type = "toggle",
+									width = "full",
+									descStyle = "inline",
+									get = function()
+										return Nx.wdb.profile.Warehouse.SellList
+									end,
+									set = function()
+										Nx.wdb.profile.Warehouse.SellList = not Nx.wdb.profile.Warehouse.SellList
+									end,									
+								},
+								new = {
+									order = 2,
+									type = "input",
+									name = L["New Item To Sell (Case Insensative)"],
+									desc = L["Enter the name of the item you want to auto-sell. You can drag and drop an item from your inventory aswell."],
+									width = "full",
+									disabled = function()
+										return not Nx.wdb.profile.Warehouse.SellList
+									end,
+									get = false,
+									set = function (info, value)
+										local name = GetItemInfo(value)
+										name = name or value
+										StaticPopupDialogs["NX_AddSell"] = {
+											text = L["Add"] .. " " .. value .. "?",
+											button1 = L["Yes"],
+											button2 = L["No"],											
+											OnAccept = function()
+												Nx.wdb.profile.Warehouse.SellingList[name] = name
+												LibStub("AceConfigRegistry-3.0"):NotifyChange("Carbonite")
+											end,
+											hideOnEscape = true,
+											whileDead = true,
+										}
+										local dlg = StaticPopup_Show("NX_AddSell")																																					
+									end,
+								},
+								delete = {
+									order = 3,
+									type = "select",									
+									style = "radio",
+									name = L["Delete Item"],
+									disabled = function()
+										return not Nx.wdb.profile.Warehouse.SellList
+									end,
+									get = false,
+									values = Nx.wdb.profile.Warehouse.SellingList,
+									set = function(info, value)
+										StaticPopupDialogs["NX_DelSell"] = {
+											text = L["Delete"] .. " " .. value .. "?",
+											button1 = L["Yes"],
+											button2 = L["No"],
+											OnAccept = function()
+												Nx.wdb.profile.Warehouse.SellingList[value] = nil
+												LibStub("AceConfigRegistry-3.0"):NotifyChange("Carbonite")
+											end,
+											hideOnEscape = true,
+											whileDead = true,
+										}
+										local dlg = StaticPopup_Show("NX_DelSell")										
+									end,
+								},
+							},
+						},
+					},
+				},
+				repair = {
 					order = 3,
-					type	= "select",
-					name	= "Warehouse Font",
-					desc	= "Sets the font to be used for warehouse windows",
-					get	= function()
-						local vals = Nx.Opts:CalcChoices("FontFace","Get")
-						for a,b in pairs(vals) do
-						  if (b == Nx.wdb.profile.Warehouse.WarehouseFont) then
-							 return a
-						  end
-						end
-						return ""
-					end,
-					set	= function(info, name)
-						local vals = Nx.Opts:CalcChoices("FontFace","Get")
-						Nx.wdb.profile.Warehouse.WarehouseFont = vals[name]						
-						Nx.Opts:NXCmdFontChange()
-					end,
-					values	= function()
-						return Nx.Opts:CalcChoices("FontFace","Get")
-					end,					
-				},
-				WareFontSize = {
-					order = 4,
-					type = "range",							
-					name = "Warehouse Font Size",						
-					desc = "Sets the size of the warehouse font",
-					min = 6,
-					max = 14,
-					step = 1,
-					bigStep = 1,
-					get = function()
-						return Nx.wdb.profile.Warehouse.WarehouseFontSize
-					end,
-					set = function(info,value)
-						Nx.wdb.profile.Warehouse.WarehouseFontSize = value
-						Nx.Opts:NXCmdFontChange()
-					end,				
-				},		
-				WareFontSpacing = {
-					order = 5,
-					type = "range",							
-					name = "Warehouse Font Spacing",						
-					desc = "Sets the spacing of the warehouse font",
-					min = -10,
-					max = 20,
-					step = 1,
-					bigStep = 1,
-					get = function()
-						return Nx.wdb.profile.Warehouse.WarehouseFontSpacing
-					end,
-					set = function(info,value)
-						Nx.wdb.profile.Warehouse.WarehouseFontSpacing = value
-						Nx.Opts:NXCmdFontChange()
-					end,				
-				},									
+					name = L["Auto Repair"],
+					type = "group",
+					args = {
+						autorepair = {
+							order = 1,
+							type = "toggle",
+							width = "full",
+							descStyle = "inline",
+							name = L["Auto Repair Gear"],
+							desc = L["When you open a merchant, will attempt to auto repair your gear"],
+							get = function()
+								return Nx.wdb.profile.Warehouse.RepairAuto
+							end,
+							set = function()
+								Nx.wdb.profile.Warehouse.RepairAuto = not Nx.wdb.profile.Warehouse.RepairAuto
+							end,
+						},
+						guildrepair = {
+							order = 2,
+							type = "toggle",
+							width = "full",
+							descStyle = "inline",
+							disabled = function() 
+								return not Nx.wdb.profile.Warehouse.RepairAuto
+							end,
+							name = L["Use Guild Repair First"],
+							desc = L["Will try to use guild funds to pay for repairs before your own"],
+							get = function()
+								return Nx.wdb.profile.Warehouse.RepairGuild
+							end,
+							set = function()
+								Nx.wdb.profile.Warehouse.RepairGuild = not Nx.wdb.profile.Warehouse.RepairGuild
+							end,						
+						},
+					},
+				},				
 			},
 		}
 	end
+	Nx.Opts:AddToProfileMenu(L["Warehouse"],5,Nx.wdb)
 	return warehouseopts
 end
 
@@ -136,18 +763,19 @@ function CarboniteWarehouse:OnInitialize()
 		CarbWHInit = Nx:ScheduleTimer(CarboniteWarehouse.OnInitialize,1)
 		return
 	end
-	Nx.wdb = LibStub("AceDB-3.0"):New("NXWhouse",defaults, true)	
-	Nx.wdb:SetProfile(Nx.db:GetCurrentProfile())
-	tinsert(Nx.dbs,Nx.wdb)	
-	Nx.Font:ModuleAdd("Warehouse.WarehouseFont",{ "NxFontWHI", "GameFontNormal","wdb" })	
+	Nx.wdb = LibStub("AceDB-3.0"):New("NXWhouse",defaults, true)
+	Nx.Warehouse:ConvertData()
+	Nx.Warehouse:InitWarehouseCharacter()
+	Nx.Font:ModuleAdd("Warehouse.WarehouseFont",{ "NxFontWHI", "GameFontNormal","wdb" })
 	Nx.Warehouse:Init()
 	Nx.Warehouse:Login()
 	local function func ()
 		Nx.Warehouse:ToggleShow()
-	end	
-	Nx.NXMiniMapBut.Menu:AddItem(0, "Show Warehouse", func, Nx.NXMiniMapBut)			
+	end
+	Nx.NXMiniMapBut.Menu:AddItem(0, L["Show Warehouse"], func, Nx.NXMiniMapBut)
 	CarboniteWarehouse:RegisterEvent("BAG_UPDATE","EventHandler")
 	CarboniteWarehouse:RegisterEvent("PLAYERBANKSLOTS_CHANGED", "EventHandler")
+	CarboniteWarehouse:RegisterEvent("PLAYERREAGENTBANKSLOTS_CHANGED", "EventHandler")
 	CarboniteWarehouse:RegisterEvent("PLAYERBANKBAGSLOTS_CHANGED", "EventHandler")
 	CarboniteWarehouse:RegisterEvent("BANKFRAME_OPENED", "EventHandler")
 	CarboniteWarehouse:RegisterEvent("BANKFRAME_CLOSED", "EventHandler")
@@ -156,6 +784,7 @@ function CarboniteWarehouse:OnInitialize()
 	CarboniteWarehouse:RegisterEvent("ITEM_LOCK_CHANGED", "EventHandler")
 	CarboniteWarehouse:RegisterEvent("MAIL_INBOX_UPDATE", "EventHandler")
 	CarboniteWarehouse:RegisterEvent("UNIT_INVENTORY_CHANGED", "EventHandler")
+	CarboniteWarehouse:RegisterEvent("MERCHANT_SHOW", "EventHandler")
 	CarboniteWarehouse:RegisterEvent("MERCHANT_CLOSED", "EventHandler")
 	CarboniteWarehouse:RegisterEvent("TIME_PLAYED_MSG", "EventHandler")
 	CarboniteWarehouse:RegisterEvent("LOOT_OPENED", "EventHandler")
@@ -164,12 +793,15 @@ function CarboniteWarehouse:OnInitialize()
 	CarboniteWarehouse:RegisterEvent("CHAT_MSG_SKILL", "EventHandler")
 	CarboniteWarehouse:RegisterEvent("SKILL_LINES_CHANGED", "EventHandler")
 	CarboniteWarehouse:RegisterEvent("TRADE_SKILL_UPDATE", "EventHandler")
-	CarboniteWarehouse:RegisterEvent("PLAYER_LOGIN","EventHandler")	
+	CarboniteWarehouse:RegisterEvent("PLAYER_LOGIN","EventHandler")
 	CarboniteWarehouse:RegisterEvent("TIME_PLAYED_MSG","EventHandler")
 	CarboniteWarehouse:RegisterEvent("UNIT_SPELLCAST_SUCCEEDED", "EventHandler")
 	CarboniteWarehouse:RegisterEvent("UNIT_SPELLCAST_FAILED", "EventHandler")
 	CarboniteWarehouse:RegisterEvent("UNIT_SPELLCAST_INTERRUPTED", "EventHandler")
-
+	GuildBank.RegisterCallback(CarboniteWarehouse,"GuildBankComm_PageUpdate", "OnPageSync")
+	GuildBank.RegisterCallback(CarboniteWarehouse, "GuildBankComm_FundsUpdate", "OnMoneySync")
+	GuildBank.RegisterCallback(CarboniteWarehouse, "GuildBankComm_TabsUpdate", "OnTabSync")
+	
 	Nx.Button.TypeData["MapWarehouse"] = {
 		Up = "$INV_Misc_EngGizmos_17",
 		SizeUp = 22,
@@ -197,21 +829,207 @@ function CarboniteWarehouse:OnInitialize()
 	}
 	tinsert (Nx.BarData,{"MapWarehouse", "-Warehouse-", Nx.Warehouse.OnButToggleWarehouse, false })
 	Nx.Map.Maps[1]:CreateToolBar()
-	
+
 	local ttHooks = {
 		"SetAction", "SetAuctionItem", "SetBagItem", "SetGuildBankItem", "SetHyperlink", "SetInboxItem", "SetInventoryItem", "SetLootItem",
-		"SetLootRollItem", "SetMerchantItem", "SetQuestItem", "SetQuestLogItem", "SetTradeSkillItem", "SetTradeTargetItem",
+		"SetLootRollItem", "SetMerchantItem", "SetRecipeReagentItem","SetRecipeResultItem", "SetQuestItem", "SetQuestLogItem", "SetTradeTargetItem",
 	}
 
 	for k, name in ipairs (ttHooks) do
-			hooksecurefunc (GameTooltip, name, Nx.Warehouse.TooltipProcess)		
+			hooksecurefunc (GameTooltip, name, Nx.Warehouse.TooltipProcess)
 			hooksecurefunc (ItemRefTooltip, name, Nx.Warehouse.ReftipProcess)
 	end
-	
-	Nx:AddToConfig("Warehouse Module",WarehouseOptions(),"Warehouse Module")
-	tinsert(Nx.BrokerMenuTemplate,{ text = "Toggle Warehouse", func = function() Nx.Warehouse:ToggleShow() end })
+
+	Nx:AddToConfig("Warehouse Module",WarehouseOptions(),L["Warehouse Module"])
+	tinsert(Nx.BrokerMenuTemplate,{ text = L["Toggle Warehouse"], func = function() Nx.Warehouse:ToggleShow() end })
 	if Nx.RequestTime then
 		RequestTimePlayed()
+	end
+end
+
+function CarboniteWarehouse:OnPageSync(event, sender, page, guildName)
+	local ware = Nx.wdb.profile.WarehouseData
+	local rn = GetRealmName()
+	local rnGuilds = ware[rn] or {}
+	ware[rn] = rnGuilds
+	local guild = rnGuilds[guildName] or {}
+	rnGuilds[guildName] = guild							
+	if not guild["Tab" .. page] then
+			guild["Tab" .. page] = {}
+	end
+	guild["Tab" .. page]["Inv"] = {}
+	for slot, link, stack in GuildBank:IteratePage(page) do
+		if stack and link then
+			guild["Tab" .. page]["Inv"][slot] = format("%s^%s",stack,link)
+		end
+	end
+	guild["Tab" .. page]["ScanTime"] = time()
+end
+
+function CarboniteWarehouse:OnMoneySync(event, sender, newFunds, guildName)
+	local ware = Nx.wdb.profile.WarehouseData
+	local rn = GetRealmName()
+	local rnGuilds = ware[rn] or {}
+	ware[rn] = rnGuilds
+	local guild = rnGuilds[guildName] or {}
+	rnGuilds[guildName] = guild		
+	guild["Money"] = newFunds	
+end
+
+function CarboniteWarehouse:OnTabSync(event, sender, numTabs, guildName)
+	local ware = Nx.wdb.profile.WarehouseData
+	local rn = GetRealmName()
+	local rnGuilds = ware[rn] or {}
+	ware[rn] = rnGuilds
+	local guild = rnGuilds[guildName] or {}
+	rnGuilds[guildName] = guild		
+	for i = 1, numTabs do
+		local name, icon = GuildBank:GetTabInfo(i)
+		if not guild["Tab" .. i] then
+			guild["Tab" .. i] = {}
+		end
+		guild["Tab" .. i].Name = name
+		guild["Tab" .. i].Icon = icon
+	end
+end
+
+function Nx.Warehouse:ConvertData()
+	if not Nx.wdb.global then
+		Nx.wdb.global = {}
+	end
+	if not Nx.wdb.global.Characters then
+		Nx.wdb.global.Characters = {}
+	end
+	for ch,data in pairs(Nx.db.global.Characters) do
+		if not Nx.wdb.global.Characters[ch] then
+			Nx.wdb.global.Characters[ch] = {}
+		end
+		if Nx.db.global.Characters[ch].WareBank then
+			Nx.wdb.global.Characters[ch].WareBank = Nx.db.global.Characters[ch].WareBank
+			Nx.db.global.Characters[ch].WareBank = nil					
+		end
+		if Nx.db.global.Characters[ch].WareMail then
+			Nx.wdb.global.Characters[ch].WareMail = Nx.db.global.Characters[ch].WareMail
+			Nx.db.global.Characters[ch].WareMail = nil					
+		end		
+		if Nx.db.global.Characters[ch].WareBank then
+			Nx.wdb.global.Characters[ch].WareBank = Nx.db.global.Characters[ch].WareBank
+			Nx.db.global.Characters[ch].WareBank = nil					
+		end
+		if Nx.db.global.Characters[ch].Time then
+			Nx.wdb.global.Characters[ch].Time = Nx.db.global.Characters[ch].Time
+			Nx.db.global.Characters[ch].Time = nil					
+		end		
+		if Nx.db.global.Characters[ch].LMoney then
+			Nx.wdb.global.Characters[ch].LMoney = Nx.db.global.Characters[ch].LMoney
+			Nx.db.global.Characters[ch].LMoney = nil					
+		end		
+		if Nx.db.global.Characters[ch].Profs then
+			Nx.wdb.global.Characters[ch].Profs = Nx.db.global.Characters[ch].Profs
+			Nx.db.global.Characters[ch].Profs = nil					
+		end		
+		if Nx.db.global.Characters[ch].LXP then
+			Nx.wdb.global.Characters[ch].LXP = Nx.db.global.Characters[ch].LXP
+			Nx.db.global.Characters[ch].LXP = nil					
+		end		
+		if Nx.db.global.Characters[ch].LHonor then
+			Nx.wdb.global.Characters[ch].LHonor = Nx.db.global.Characters[ch].LHonor
+			Nx.db.global.Characters[ch].LHonor = nil					
+		end		
+		if Nx.db.global.Characters[ch].DurLowPercent then
+			Nx.wdb.global.Characters[ch].DurLowPercent = Nx.db.global.Characters[ch].DurLowPercent
+			Nx.db.global.Characters[ch].DurLowPercent = nil					
+		end		
+		if Nx.db.global.Characters[ch].XPMax then
+			Nx.wdb.global.Characters[ch].XPMax = Nx.db.global.Characters[ch].XPMax
+			Nx.db.global.Characters[ch].XPMax = nil					
+		end		
+		if Nx.db.global.Characters[ch].Conquest then
+			Nx.wdb.global.Characters[ch].Conquest = Nx.db.global.Characters[ch].Conquest
+			Nx.db.global.Characters[ch].Conquest = nil					
+		end		
+		if Nx.db.global.Characters[ch].LArenaPts then
+			Nx.wdb.global.Characters[ch].LArenaPts = Nx.db.global.Characters[ch].LArenaPts
+			Nx.db.global.Characters[ch].LArenaPts = nil					
+		end		
+		if Nx.db.global.Characters[ch].TimePlayed then
+			Nx.wdb.global.Characters[ch].TimePlayed = Nx.db.global.Characters[ch].TimePlayed
+			Nx.db.global.Characters[ch].TimePlayed = nil					
+		end				
+		if Nx.db.global.Characters[ch].XP then
+			Nx.wdb.global.Characters[ch].XP = Nx.db.global.Characters[ch].XP
+			Nx.db.global.Characters[ch].XP = nil					
+		end				
+		if Nx.db.global.Characters[ch].XPRest then
+			Nx.wdb.global.Characters[ch].XPRest = Nx.db.global.Characters[ch].XPRest
+			Nx.db.global.Characters[ch].XPRest = nil					
+		end				
+		if Nx.db.global.Characters[ch].Honor then
+			Nx.wdb.global.Characters[ch].Honor = Nx.db.global.Characters[ch].Honor
+			Nx.db.global.Characters[ch].Honor = nil					
+		end				
+		if Nx.db.global.Characters[ch].Money then
+			Nx.wdb.global.Characters[ch].Money = Nx.db.global.Characters[ch].Money
+			Nx.db.global.Characters[ch].Money = nil					
+		end				
+		if Nx.db.global.Characters[ch].WareBags then
+			Nx.wdb.global.Characters[ch].WareBags = Nx.db.global.Characters[ch].WareBags
+			Nx.db.global.Characters[ch].WareBags = nil					
+		end				
+		if Nx.db.global.Characters[ch].LXPMax then
+			Nx.wdb.global.Characters[ch].LXPMax = Nx.db.global.Characters[ch].LXPMax
+			Nx.db.global.Characters[ch].LXPMax = nil					
+		end				
+		if Nx.db.global.Characters[ch].LTime then
+			Nx.wdb.global.Characters[ch].LTime = Nx.db.global.Characters[ch].LTime
+			Nx.db.global.Characters[ch].LTime = nil					
+		end				
+		if Nx.db.global.Characters[ch].LXPRest then
+			Nx.wdb.global.Characters[ch].LXPRest = Nx.db.global.Characters[ch].LXPRest
+			Nx.db.global.Characters[ch].LXPRest = nil					
+		end				
+		if Nx.db.global.Characters[ch].DurPercent then
+			Nx.wdb.global.Characters[ch].DurPercent = Nx.db.global.Characters[ch].DurPercent
+			Nx.db.global.Characters[ch].DurPercent = nil					
+		end				
+		if Nx.db.global.Characters[ch].WareInv then
+			Nx.wdb.global.Characters[ch].WareInv = Nx.db.global.Characters[ch].WareInv
+			Nx.db.global.Characters[ch].WareInv = nil					
+		end				
+		if Nx.db.global.Characters[ch].LvlTime then
+			Nx.wdb.global.Characters[ch].LvlTime = Nx.db.global.Characters[ch].LvlTime
+			Nx.db.global.Characters[ch].LvlTime = nil					
+		end				
+		if Nx.db.global.Characters[ch].Pos then
+			Nx.wdb.global.Characters[ch].Pos = Nx.db.global.Characters[ch].Pos
+			Nx.db.global.Characters[ch].Pos = nil					
+		end				
+		if Nx.db.global.Characters[ch].WHHide then
+			Nx.wdb.global.Characters[ch].WHHide = Nx.db.global.Characters[ch].WHHide
+			Nx.db.global.Characters[ch].WHHide = nil					
+		end				
+		if Nx.db.global.Characters[ch].Garrison then
+			Nx.wdb.global.Characters[ch].Garrison = Nx.db.global.Characters[ch].Garrison
+			Nx.db.global.Characters[ch].Garrison = nil					
+		end				
+		if Nx.db.global.Characters[ch].Apexis then
+			Nx.wdb.global.Characters[ch].Apexis = Nx.db.global.Characters[ch].Apexis
+			Nx.db.global.Characters[ch].Apexis = nil					
+		end				
+		if Nx.db.global.Characters[ch].WareRBank then
+			Nx.wdb.global.Characters[ch].WareRBank = Nx.db.global.Characters[ch].WareRBank
+			Nx.db.global.Characters[ch].WareRBank = nil					
+		end
+		if Nx.db.global.Characters[ch].OrderHall then
+			Nx.wdb.global.Characters[ch].OrderHall = Nx.db.global.Characters[ch].OrderHall
+			Nx.db.global.Characters[ch].OrderHall = nil
+		end
+		if Nx.db.global.Characters[ch].Class then
+			Nx.wdb.global.Characters[ch].Class = Nx.db.global.Characters[ch].Class			
+		end								
+		if Nx.db.global.Characters[ch].Level then
+			Nx.wdb.global.Characters[ch].Level = Nx.db.global.Characters[ch].Level			
+		end								
 	end
 end
 
@@ -220,6 +1038,8 @@ function CarboniteWarehouse:EventHandler(event, arg1, arg2, arg3)
 		Nx.Warehouse:OnBag_update()
 	elseif event == "PLAYERBANKSLOTS_CHANGED" then
 		Nx.Warehouse:OnBag_update()
+	elseif event == "PLAYERREAGENTBANKSLOTS_CHANGED" then
+		Nx.Warehouse:ScanRBank()
 	elseif event == "PLAYERBANKBAGSLOTS_CHANGED" then
 		Nx.Warehouse:OnBag_update()
 	elseif event == "BANKFRAME_OPENED" then
@@ -236,6 +1056,8 @@ function CarboniteWarehouse:EventHandler(event, arg1, arg2, arg3)
 		Nx.Warehouse:OnMail_inbox_update()
 	elseif event == "UNIT_INVENTORY_CHANGED" then
 		Nx.Warehouse:OnUnit_inventory_changed()
+	elseif event == "MERCHANT_SHOW" then
+		Nx.Warehouse:OnMerchant_show()
 	elseif event == "MERCHANT_CLOSED" then
 		Nx.Warehouse:OnMerchant_closed()
 	elseif event == "LOOT_OPENED" then
@@ -262,7 +1084,7 @@ function CarboniteWarehouse:EventHandler(event, arg1, arg2, arg3)
 		Nx.Warehouse:OnUnit_spellcast_succeeded(event, arg1, arg2, arg3)
 	else
 		Nx.prt("ERROR: Event " .. event .. " triggered without function.")
-	end	
+	end
 end
 
 function Nx.Warehouse:OnTime_played_msg (event, arg1, arg2)
@@ -272,12 +1094,12 @@ function Nx.Warehouse:OnTime_played_msg (event, arg1, arg2)
 		Nx.prt("Time played this level: " .. Nx.Util_SecondsToDays(arg2))
 	end
 	Nx.RequestTime = false
-	local ch = Nx.CurCharacter
+	local ch = Nx.Warehouse.CurCharacter
 	Nx.Warehouse:GuildRecord()
 	if Nx.Warehouse.TimePlayed then
 		ch["TimePlayed"] = Nx.Warehouse.TimePlayed
 		Nx.Warehouse.TimePlayed = nil
-	end		
+	end
 end
 
 function Nx.Warehouse:OnUnit_spellcast_interrupted (event, arg1)
@@ -314,7 +1136,7 @@ function Nx.Warehouse:Init()
 		Nx.wdb.profile.WarehouseData = ware
 		ware.Version = Nx.VERSIONWare
 	end
-	
+
 	self.Enabled = Nx.wdb.profile.Warehouse.Enable
 
 	self.SkillRiding = 0
@@ -331,6 +1153,7 @@ function Nx.Warehouse:Init()
 		["Warrior"] = "INV_Sword_27",
 		["Death Knight"] = "Spell_Deathknight_ClassIcon",
 		["Monk"] = "class_monk",
+		["Demonhunter"] = "INV_Glaive_1h_npc_d_01",		
 	}
 
 	self.InvNames = {
@@ -339,13 +1162,13 @@ function Nx.Warehouse:Init()
 		"HandsSlot", "WaistSlot", "LegsSlot", "FeetSlot",
 		"Finger0Slot", "Finger1Slot", "Trinket0Slot", "Trinket1Slot",
 		"MainHandSlot", "SecondaryHandSlot", "AmmoSlot",	-- "RangedSlot" removed 5.0
-		"Bag0Slot", "Bag1Slot", "Bag2Slot", "Bag3Slot" 
+		"Bag0Slot", "Bag1Slot", "Bag2Slot", "Bag3Slot"
 	}
 
 --	self.LProfessions = TRADE_SKILLS
 --	self.LSecondarySkills = gsub (SECONDARY_SKILLS, ":", "")
 
-	self.ItemTypes = NXlItemTypes
+	self.ItemTypes = L["ItemTypes"]
 
 	-- Create durability scanner tooltip
 
@@ -359,11 +1182,13 @@ function Nx.Warehouse:Init()
 	self.DurTooltipFrm:SetOwner (UIParent, "ANCHOR_NONE")		-- We won't see with this anchor
 end
 
---------
+-------------------------------------------------------------------------------
 -- Debug print
+-------------------------------------------------------------------------------
 
 function Nx.Warehouse:Login(event, arg1)
-	local ch = Nx.CurCharacter
+	local ch = Nx.Warehouse.CurCharacter
+	Nx.Warehouse:RecordCharacterLogin()
 	Nx.Warehouse:GuildRecord()
 	if Nx.Warehouse.TimePlayed then
 		ch["TimePlayed"] = Nx.Warehouse.TimePlayed
@@ -373,7 +1198,7 @@ function Nx.Warehouse:Login(event, arg1)
 			ChatFrame_DisplayTimePlayed = Nx.BlizzChatFrame_DisplayTimePlayed		-- Restore
 			Nx.BlizzChatFrame_DisplayTimePlayed = nil
 		end
-	end	
+	end
 end
 
 function Nx.Warehouse:prtdb (...)
@@ -382,8 +1207,9 @@ function Nx.Warehouse:prtdb (...)
 	end
 end
 
---------
+-------------------------------------------------------------------------------
 -- Create warehouse window
+-------------------------------------------------------------------------------
 
 function Nx.Warehouse:Create()
 	self.SelectedChar = 1
@@ -466,43 +1292,44 @@ function Nx.Warehouse:Create()
 
 end
 
---------
+-------------------------------------------------------------------------------
 -- Create menu
+-------------------------------------------------------------------------------
 
 function Nx.Warehouse:CreateMenu()
 
 	local menu = Nx.Menu:Create (self.List.Frm, 250)
 	self.Menu = menu
 
-	local item = menu:AddItem (0, "Remove Character or Guild", self.Menu_OnRemoveChar, self)
+	local item = menu:AddItem (0, L["Remove Character or Guild"], self.Menu_OnRemoveChar, self)
 
 	menu:AddItem (0, "", nil, self)
-	menu:AddItem (0, "Import settings from selected character", self.Menu_OnImport, self)
-	menu:AddItem (0, "Export current settings to all characters", self.Menu_OnExport, self)
+	menu:AddItem (0, L["Import settings from selected character"], self.Menu_OnImport, self)
+	menu:AddItem (0, L["Export current settings to all characters"], self.Menu_OnExport, self)
 
 	menu:AddItem (0, "", nil, self)
-	menu:AddItem (0, "Sync account transfer file", self.Menu_OnSyncAccount, self)
+	menu:AddItem (0, L["Sync account transfer file"], self.Menu_OnSyncAccount, self)
 
 	local menu = Nx.Menu:Create (self.List.Frm, 250)
 	self.IListMenu = menu
 
 	self.NXEqRarityMin = 7
 
-	local item = menu:AddItem (0, "Show Lowest Equipped Rarity", self.Menu_OnRarityMin, self)
+	local item = menu:AddItem (0, L["Show Lowest Equipped Rarity"], self.Menu_OnRarityMin, self)
 	item:SetSlider (self, 0, 7, 1, "NXEqRarityMin")
 
-	local item = menu:AddItem (0, "Show Item Headers", self.Menu_OnShowItemCat, self)
+	local item = menu:AddItem (0, L["Show Item Headers"], self.Menu_OnShowItemCat, self)
 	item:SetChecked (true)
 
-	local item = menu:AddItem (0, "Sort By Rarity", self.Menu_OnSortByRarity, self)
+	local item = menu:AddItem (0, L["Sort By Rarity"], self.Menu_OnSortByRarity, self)
 	item:SetChecked (false)
 
 	self.NXRarityMin = 0
 
-	local item = menu:AddItem (0, "Show Lowest Rarity", self.Menu_OnRarityMin, self)
+	local item = menu:AddItem (0, L["Show Lowest Rarity"], self.Menu_OnRarityMin, self)
 	item:SetSlider (self, 0, 7, 1, "NXRarityMin")
 
-	local item = menu:AddItem (0, "Sort By Slot", self.Menu_OnSortBySlot, self)
+	local item = menu:AddItem (0, L["Sort By Slot"], self.Menu_OnSortBySlot, self)
 	item:SetChecked (false)
 end
 
@@ -521,6 +1348,7 @@ function Nx.Warehouse:Menu_OnRemoveChar (item)
 
 			tremove (Nx.RealmChars, cn)
 			Nx.db.global.Characters[rc] = nil
+			Nx.wdb.global.Characters[rc] = nil
 			self.SelectedChar = 1
 		end
 	end
@@ -534,11 +1362,11 @@ function Nx.Warehouse:Menu_OnImport (item)
 	local rc = Nx.RealmChars[cn]
 	if cn > 1 and rc then
 
-		local rname, sname = strsplit (".", rc)
+		local rname, sname = Nx.Split (".", rc)
 		self.ImportChar = sname
 
-		local s = format ("Import %s's character data and reload?", sname)
-		Nx:ShowMessage (s, "Import", Nx.Warehouse.ImportDo, "Cancel")
+		local s = format (L["Import %s's character data and reload?"], sname)
+		Nx:ShowMessage (s, L["Import"], Nx.Warehouse.ImportDo, L["Cancel"])
 	end
 end
 
@@ -553,8 +1381,8 @@ function Nx.Warehouse.ImportDo()
 end
 
 function Nx.Warehouse:Menu_OnExport (item)
-	local s = format ("Overwrite all character settings and reload?", sname)
-	Nx:ShowMessage (s, "Export", Nx.Warehouse.ExportDo, "Cancel")
+	local s = format (L["Overwrite all character settings and reload?"], sname)
+	Nx:ShowMessage (s, L["Export"], Nx.Warehouse.ExportDo, L["Cancel"])
 end
 
 function Nx.Warehouse.ExportDo()
@@ -565,8 +1393,8 @@ function Nx.Warehouse.ExportDo()
 end
 
 function Nx.Warehouse:Menu_OnSyncAccount()
-	Nx:ImportCharacterData()
-	Nx:ExportCharacterData()
+	Nx.Warehouse.ImportDo()
+	Nx.Warehouse.ExportDo()
 	Nx:CalcRealmChars()
 	self:Update()
 end
@@ -590,15 +1418,17 @@ function Nx.Warehouse:Menu_OnSortBySlot (item)
 	self:Update()
 end
 
---------
+-------------------------------------------------------------------------------
 -- Show or hide
+-------------------------------------------------------------------------------
 
 function Nx:NXWarehouseKeyToggleShow()
 	Nx.Warehouse:ToggleShow()
 end
 
---------
+-------------------------------------------------------------------------------
 -- Show or hide window
+-------------------------------------------------------------------------------
 
 function Nx.Warehouse:ToggleShow()
 
@@ -627,8 +1457,9 @@ function Nx.Warehouse:OnEditBox (editbox, message)
 	end
 end
 
---------
+-------------------------------------------------------------------------------
 -- On list events
+-------------------------------------------------------------------------------
 
 function Nx.Warehouse:OnListEvent (eventName, sel, val2, click)
 
@@ -642,15 +1473,15 @@ function Nx.Warehouse:OnListEvent (eventName, sel, val2, click)
 
 	self.SelectedGuild = false
 	self.SelectedProf = false
-
+	self.SelectedChar = false
+	
 	if (id >= 1 and id <= #Nx.RealmChars) or id == 99 then
 		self.SelectedChar = id
-	end
-
+	end	
 	if eventName == "select" or eventName == "mid" or eventName == "menu" then
 
 		if id == 100 then
-			self.SelectedGuild = prof
+			self.SelectedGuild = prof			
 		else
 			self.SelectedProf = prof
 		end
@@ -671,7 +1502,7 @@ function Nx.Warehouse:OnListEvent (eventName, sel, val2, click)
 
 		if prof then
 
-			local ch = Nx.db.global.Characters[Nx.RealmChars[id]]
+			local ch = Nx.wdb.global.Characters[Nx.RealmChars[id]]
 			local profT = ch["Profs"][prof]
 
 			local frm = DEFAULT_CHAT_FRAME
@@ -686,7 +1517,7 @@ function Nx.Warehouse:OnListEvent (eventName, sel, val2, click)
 
 		elseif id >= 1 and id <= #Nx.RealmChars then
 
-			local ch = Nx.db.global.Characters[Nx.RealmChars[id]]
+			local ch = Nx.wdb.global.Characters[Nx.RealmChars[id]]
 			if ch then
 				ch["WHHide"] = val2		-- Pressed
 			end
@@ -695,7 +1526,7 @@ function Nx.Warehouse:OnListEvent (eventName, sel, val2, click)
 
 			for cnum, rc in ipairs (Nx.RealmChars) do
 
-				local ch = Nx.db.global.Characters[rc]
+				local ch = Nx.wdb.global.Characters[rc]
 				if ch then
 					ch["WHHide"] = true
 				end
@@ -706,14 +1537,15 @@ function Nx.Warehouse:OnListEvent (eventName, sel, val2, click)
 	end
 end
 
---------
+-------------------------------------------------------------------------------
 -- On item list events
+-------------------------------------------------------------------------------
 
 function Nx.Warehouse:OnItemListEvent (eventName, sel, val2, click)
 
 --	Nx.prt ("List event "..eventName)
 
-	local list = self.ItemList	
+	local list = self.ItemList
 
 	local id = list:ItemGetData (sel) or 0
 
@@ -801,14 +1633,15 @@ function Nx.Warehouse:OnItemListEvent (eventName, sel, val2, click)
 	end
 end
 
---------
+-------------------------------------------------------------------------------
 -- Update Warehouse
+-------------------------------------------------------------------------------
 
 function Nx.Warehouse:Update()
 
 	local Nx = Nx
 
-	if not Nx.CurCharacter then	-- Can even happen?
+	if not Nx.Warehouse.CurCharacter then	-- Can even happen?
 		return
 	end
 
@@ -818,7 +1651,7 @@ function Nx.Warehouse:Update()
 
 	-- Title
 
-	self.Win:SetTitle (format ("Warehouse: %d characters", #Nx.RealmChars))
+	self.Win:SetTitle (format (L["Warehouse: %d characters"], #Nx.RealmChars))
 
 	-- List
 
@@ -839,54 +1672,70 @@ function Nx.Warehouse:Update()
 
 	local ware = Nx.wdb.profile.WarehouseData
 	local rn = GetRealmName()
-
+	local guildlabel = false
 	for name, guilds in pairs (ware) do
-		if name == rn then
-
+		if not guildlabel then
+			guildlabel = true
+			list:ItemAdd(0)
+			list:ItemSet (2, "|cff999999--------- " .. L["Guilds"] .. " ---------")
+		end
+		if name == rn then			
 			for gName, guild in pairs (guilds) do
-
 				local moneyStr = guild["Money"] and Nx.Util_GetMoneyStr (guild["Money"]) or "?"
-
 				list:ItemAdd (100)
-				list:ItemSet (2, format ("|cffff7fff%s %s", gName, moneyStr))
+				if Nx.wdb.profile.Warehouse.ShowGold then
+					list:ItemSet (2, format ("|cffff7fff%s %s", gName, moneyStr))
+				else
+					list:ItemSet (2, format ("|cffff7fff%s", gName))
+				end
 				list:ItemSetDataEx (nil, gName, 1)
+			end
+		end
+		local connectedrealms = GetAutoCompleteRealms()
+		if connectedrealms then
+			for i=1,#connectedrealms do
+				if connectedrealms[i] ~= rn and name == connectedrealms[i] then
+					for gName, guild in pairs (guilds) do
+						local moneyStr = guild["Money"] and Nx.Util_GetMoneyStr (guild["Money"]) or "?"
+						list:ItemAdd (100)
+						if Nx.wdb.profile.Warehouse.ShowGold then
+							list:ItemSet (2, format ("|cffff7fff%s %s", gName, moneyStr))
+						else
+							list:ItemSet (2, format ("|cffff7fff%s", gName))
+						end
+						list:ItemSetDataEx (nil, gName, 1)
+					end
+				end
 			end
 		end
 	end
 
 	list:ItemAdd (0)
-	list:ItemSet (2, "-------------------------")
+	list:ItemSet (2, "|cff999999--------- " .. L["Characters"] .. " ---------")
 
 	for cnum, rc in ipairs (Nx.RealmChars) do
-
-		local rname, cname = strsplit (".", rc)
-
+		local rname, cname = Nx.Split (".", rc)
 		local cnameCol = "|cffafdfaf"
-
 		if cname == myName then		-- Me?
 			cnameCol = "|cffdfffdf"
 		end
-
-		local ch = Nx.db.global.Characters[rc]
+		local ch = Nx.wdb.global.Characters[rc]
 		if ch then
-
 			totalChars = totalChars + 1
 			totalPlayed = totalPlayed + ch["TimePlayed"]
-
 			local lvl = tonumber (ch["Level"] or 0)
-
 --			ch["Class"] = "Deathknight"	-- TEST
-
 			local cls = ch["Class"] or "?"
-
 			local money = ch["Money"]
 			totalMoney = totalMoney + (money or 0)
 			local moneyStr = Nx.Util_GetMoneyStr (money)
-
 			list:ItemAdd (cnum)
 			local s = ch["Account"] and format ("%s (%s)", cname, ch["Account"]) or cname
-			list:ItemSet (2, format ("%s%s %s %s  %s", cnameCol, s, lvl, cls, moneyStr))
-
+			if Nx.wdb.profile.Warehouse.ShowGold then
+				list:ItemSet (2, format ("%s%s %s %s %s", cnameCol, s, lvl, cls, moneyStr))
+			else
+				list:ItemSet (2, format ("%s%s %s %s", cnameCol, s, lvl, cls))
+			end
 			local hide = ch["WHHide"]
 
 			if self.ClassIcons[ch["Class"]] then
@@ -902,41 +1751,47 @@ function Nx.Warehouse:Update()
 					local hours = secs / 3600
 					local lvlHours = difftime (time(), ch["LvlTime"]) / 3600
 					local played = Nx.Util_GetTimeElapsedStr (ch["TimePlayed"])
-
 					list:ItemAdd (cnum)
-					list:ItemSet (2, format (" Time On: %s%2d:%02d:%02d|r, Played: %s%s", hicol, hours, mins, secs % 60, hicol, played))
-
+					list:ItemSet (2, format (L[" Realm:%s %s"],hicol,rname))
+					list:ItemAdd (cnum)
+					local moneyStr = Nx.Util_GetMoneyStr (ch["Money"])
+					list:ItemSet (2, format (" " .. L["Current Funds"] .. ": %s",moneyStr))
+					list:ItemAdd (cnum)
+					list:ItemSet (2, format (L[" Time On: %s%2d:%02d:%02d|r, Played: %s%s"], hicol, hours, mins, secs % 60, hicol, played))
 					local money = (ch["Money"] or 0) - ch["LMoney"]
-					local moneyStr = Nx.Util_GetMoneyStr (money)
+					moneyStr = Nx.Util_GetMoneyStr (money)
 					local moneyHStr = Nx.Util_GetMoneyStr (money / hours)
 
 					list:ItemAdd (cnum)
-					list:ItemSet (2, format (" Session Money: %s|r, Per Hour: %s", moneyStr, moneyHStr))
+					list:ItemSet (2, format (L[" Session Money:%s %s|r, Per Hour:%s %s"], hicol, moneyStr, hicol, moneyHStr))
 
 					if ch["DurPercent"] then
 
 						local col = (ch["DurPercent"] < 50 or ch["DurLowPercent"] < 50) and "|cffff0000" or hicol
 
 						list:ItemAdd (cnum)
-						list:ItemSet (2, format (" Durability: %s%d%%, lowest %d%%", col, ch["DurPercent"], ch["DurLowPercent"]))
+						list:ItemSet (2, format (L[" Durability: %s%d%%, lowest %d%%"], col, ch["DurPercent"], ch["DurLowPercent"]))
 					end
 
 					if lvl < MAX_PLAYER_LEVEL then
 						local rest = ch["LXPRest"] / ch["LXPMax"] * 100		-- Sometimes over 150%?
 						local xp = ch["XP"] - ch["LXP"]
 						list:ItemAdd (cnum)
-						list:ItemSet (2, format (" Session XP: %s, Per Hour: %.0f", xp, xp / lvlHours))
-
+						list:ItemSet (2, format (L[" Session XP:%s %s|r, Per Hour:%s %.0f"], hicol, xp, hicol, xp / lvlHours))
 						xp = max (1, xp)
 						local lvlTime = (ch["XPMax"] - ch["XP"]) / (xp / lvlHours)
 
 						if lvlTime < 100 then
 							list:ItemAdd (cnum)
-							list:ItemSet (2, format (" Hours To Level: %s%.1f", hicol, lvlTime))
+							list:ItemSet (2, format (L[" Hours To Level: %s%.1f"], hicol, lvlTime))
 						end
 					end
 				else
-
+					list:ItemAdd (cnum)
+					list:ItemSet (2, format (L[" Realm:%s %s"],hicol,rname))
+					local moneyStr = Nx.Util_GetMoneyStr (ch["Money"])
+					list:ItemAdd (cnum)					
+					list:ItemSet (2, format (" " .. L["Current Funds"] .. ": %s",moneyStr))					
 					if ch["Time"] then
 
 						local secs = difftime (time(), ch["Time"])
@@ -944,18 +1799,14 @@ function Nx.Warehouse:Update()
 						local played = Nx.Util_GetTimeElapsedStr (ch["TimePlayed"])
 
 						list:ItemAdd (cnum)
-						list:ItemSet (2, format (" Last On: %s%s|r, Played: %s%s", hicol, str, hicol, played))
+						list:ItemSet (2, format (L[" Last On: %s%s|r, Played: %s%s"], hicol, str, hicol, played))
 					end
-
 					if ch["Pos"] then
-
-						local mid, x, y = strsplit ("^", ch["Pos"])
-
+						local mid, x, y = Nx.Split ("^", ch["Pos"])
 						local map = Nx.Map:GetMap (1)
 						local name = map:IdToName (tonumber (mid))
-
 						list:ItemAdd (cnum)
-						list:ItemSet (2, format (" Location: %s%s (%d, %d)", hicol, name, x, y))
+						list:ItemSet (2, format (L[" Location: %s%s (%d, %d)"], hicol, name, x, y))
 					end
 				end
 
@@ -964,7 +1815,7 @@ function Nx.Warehouse:Update()
 
 						local rest = ch["LXPRest"] / ch["LXPMax"] * 100
 						list:ItemAdd (cnum)
-						list:ItemSet (2, format (" Start XP: %s%s/%s (%.0f%%)|r Rest: %s%.0f%%", hicol, ch["LXP"], ch["LXPMax"], ch["LXP"] / ch["LXPMax"] * 100, hicol, rest))
+						list:ItemSet (2, format (L[" Start XP: %s%s/%s (%.0f%%)|r Rest: %s%.0f%%"], hicol, ch["LXP"], ch["LXPMax"], ch["LXP"] / ch["LXPMax"] * 100, hicol, rest))
 
 						local rest = ch["XPRest"] / ch["XPMax"] * 100
 
@@ -973,28 +1824,29 @@ function Nx.Warehouse:Update()
 						end
 
 						list:ItemAdd (cnum)
-						list:ItemSet (2, format (" XP: %s%s/%s (%.0f%%)|r Rest: %s%.0f%%", hicol, ch["XP"], ch["XPMax"], ch["XP"] / ch["XPMax"] * 100, hicol, rest))
+						list:ItemSet (2, format (L[" XP: %s%s/%s (%.0f%%)|r Rest: %s%.0f%%"], hicol, ch["XP"], ch["XPMax"], ch["XP"] / ch["XPMax"] * 100, hicol, rest))
 					end
 				end
-
+				list:ItemAdd(cnum)
+				list:ItemSet (2, "|cff00ffff  ------")
 				if ch["Honor"] and ch["Conquest"] then
 					list:ItemAdd (cnum)
-					list:ItemSet (2, format (" Honor: %s%s|r  Conquest: %s%s", hicol, ch["Honor"], hicol, ch["Conquest"]))
+					list:ItemSet (2, format (L[" Honor: %s%s|r  Conquest: %s%s"], hicol, ch["Honor"], hicol, ch["Conquest"]))
 				end
-				if ch["Valor"] and ch["Justice"] then
+				if ch["Apexis"] then
 					list:ItemAdd(cnum)
-					list:ItemSet(2, format (" Valor: %s%s|r  Justice: %s%s", hicol, ch["Valor"], hicol, ch["Justice"])) 
+					list:ItemSet(2, format (L[" Apexis Crystals: %s%s"], hicol, ch["Apexis"]))
 				end
---[[
-				if ch["Professions"] then
-					for n, data in ipairs (ch["Professions"]) do
-						local name, rank = strsplit ("^", data)
-						list:ItemAdd (cnum)
-						list:ItemSetDataEx (nil, name, 1)
-						list:ItemSet (2, format (" %s %s%s", name, hicol, rank))
-					end
+				if ch["Garrison"] then
+					list:ItemAdd(cnum)
+					list:ItemSet(2, format (L[" Garrison Resources: %s%s"], hicol, ch["Garrison"]))
 				end
---]]
+				if ch["OrderHall"] then
+					list:ItemAdd(cnum)
+					list:ItemSet(2, format (L[" Order Resources: %s%s"], hicol, ch["OrderHall"]))
+				end
+				list:ItemAdd(cnum)
+				list:ItemSet (2, "|cff00ffff  ------")
 				if ch["Profs"] then
 
 					local profs = ch["Profs"]
@@ -1022,20 +1874,98 @@ function Nx.Warehouse:Update()
 			end
 		end
 	end
-
 	local money = Nx.Util_GetMoneyStr (totalMoney)
-	local played = Nx.Util_GetTimeElapsedStr (totalPlayed)
-	list:ItemSet (2, format ("|cffafdfafAll: %s. |cffafdfafPlayed: %s%s", money, hicol, played), allIndex)
-
+	if Nx.wdb.profile.Warehouse.ShowGold then
+		list:ItemSet (2, format ("|cffafdfaf %s" .. L["All Characters"],money), allIndex)
+	else
+		list:ItemSet (2, format ("|cffafdfaf" .. L["All Characters"]), allIndex)
+	end
+	
 	list:Update()
 
 	-- Right side list
 
-	if not self.SelectedProf then
+	if self.SelectedProf then
+		self:UpdateProfessions()
+	elseif self.SelectedGuild then
+		self:UpdateGuild()
+	elseif self.SelectedChar then
 		self:UpdateItems()
 	else
-		self:UpdateProfessions()
+		self:UpdateBlank()
 	end
+end
+
+function Nx.Warehouse:UpdateBlank()
+	local list = self.ItemList
+	list:Empty()
+	list:ColumnSetName (3, "")
+	list:Update()
+end
+
+function Nx.Warehouse:UpdateGuild()
+	local list = self.ItemList
+	list:Empty()
+	local ware = Nx.wdb.profile.WarehouseData
+	local rn = GetRealmName()	
+	local selectedguild = {}
+	for name, guilds in pairs (ware) do
+		if name == rn then			
+			for gName, guild in pairs (guilds) do
+					if gName == self.SelectedGuild then
+						selectedguild = guild
+					end
+			end
+		end
+		if not selectedguild then
+			local connectedrealms = GetAutoCompleteRealms()
+			if connectedrealms then
+				for i=1,#connectedrealms do
+					if connectedrealms[i] ~= rn and name == connectedrealms[i] then
+						for gName, guild in pairs (guilds) do
+							if gName == self.SelectedGuild then
+								selectedguild = guild
+							end
+						end
+					end
+				end
+			end
+		end
+	end		
+	list:ColumnSetName (3, format(L["Guild Bank"] .. " -- %s",self.SelectedGuild))
+	local moneyStr = selectedguild["Money"] and Nx.Util_GetMoneyStr (selectedguild["Money"]) or "?"
+	list:ItemAdd (0)
+	list:ItemSet (3, L["Current Funds"] .. ": " .. moneyStr)		
+	list:ItemAdd (0)
+	list:ItemSet (3, "")			
+	for tab = 1,8 do		
+		if selectedguild["Tab" .. tab] and not next(selectedguild["Tab" .. tab]) then
+			list:ItemAdd(0)
+			list:ItemSet(3,"|cffff0000---- " .. L["Tab"] .. " " .. tab .. " " .. L["not opened or scanned."])
+		else
+			list:ItemAdd(0)
+			list:ItemSetButton ("Warehouse", false, selectedguild["Tab" .. tab].Icon)
+			list:ItemSet(3,selectedguild["Tab" .. tab].Name)
+			list:ItemAdd(0)
+			local dateStr = Nx.Util_GetTimeElapsedStr(time() - selectedguild["Tab" .. tab].ScanTime)
+			list:ItemSet(3,"|cff00ffff" .. L["Last Updated"] .. ":|r " .. dateStr .. " |cff00ffff" .. L["ago"])
+			if selectedguild["Tab" .. tab].Inv and not next(selectedguild["Tab" .. tab].Inv) then			
+				list:ItemAdd(0)
+				list:ItemSet(3,"|cffff0000--- " .. L["Tab is empty or no access"] .. " ---")
+			else
+				for slot,item in pairs(selectedguild["Tab" .. tab].Inv) do
+					if item then
+						local stack, link = Nx.Split("^",item)
+						local name = GetItemInfo(link)
+						self:UpdateItem ("", name, stack, 0, 0, link)
+					end
+				end
+			end
+		end		
+		list:ItemAdd(0)
+		list:ItemSet(3,"")
+	end
+	list:Update()
 end
 
 function Nx.Warehouse:UpdateItems()
@@ -1058,34 +1988,34 @@ function Nx.Warehouse:UpdateItems()
 
 		local rc = Nx.RealmChars[cn1]
 
-		local rname, cname = strsplit (".", rc)
-		list:ColumnSetName (3, format ("%s's Items", cname))
+		local rname, cname = Nx.Split (".", rc)
+		list:ColumnSetName (3, format (L["%s's Items"], cname))
 
-		local ch = Nx.db.global.Characters[rc]
-
+		local ch = Nx.wdb.global.Characters[rc]
+		
 		local bank = ch["WareBank"]
 		if not bank then
 			list:ItemAdd (0)
-			list:ItemSet (3, "|cffff1010No bank data - visit your bank")
+			list:ItemSet (3, L["|cffff1010No bank data - visit your bank"])
+		end
+
+		local rbank = ch["WareRBank"]
+		if not rbank then
+			list:ItemAdd (0)
+			list:ItemSet (3, L["|cffff1010No reagent bank data - visit your bank"])
 		end
 
 		local inv = ch["WareInv"]
 
 		if inv then
-
 			list:ItemAdd (0)
-			list:ItemSet (3, "---- Equipped ----")
-
+			list:ItemSet (3, L["---- Equipped ----"])
 			for _, data in ipairs (inv) do
-
-				local slot, link = strsplit ("^", data)
+				local slot, link = Nx.Split ("^", data)
 				Nx.Item:Load (link)
-
-				slot = gsub (slot, "Slot", "")
+				slot = gsub (slot, L["Slot"], "")
 				slot = gsub (slot, "%d", "")
-
 				local name = GetItemInfo (link)
-
 				self:UpdateItem (format ("  %s - ", slot), name, 1, 0, 0, link, true)
 			end
 		end
@@ -1094,7 +2024,7 @@ function Nx.Warehouse:UpdateItems()
 		for cn = cn1, cn2 do
 
 			local rc = Nx.RealmChars[cn]
-			local ch = Nx.db.global.Characters[rc]
+			local ch = Nx.wdb.global.Characters[rc]
 
 			local inv = ch["WareInv"]
 
@@ -1104,10 +2034,10 @@ function Nx.Warehouse:UpdateItems()
 
 				for _, data in ipairs (inv) do
 
-					local slot, link = strsplit ("^", data)
+					local slot, link = Nx.Split ("^", data)
 					Nx.Item:Load (link)
 
-					slot = gsub (slot, "Slot", "")
+					slot = gsub (slot, L["Slot"], "")
 					slot = gsub (slot, "%d", "")
 
 					local name, _, iRarity = GetItemInfo (link)
@@ -1116,8 +2046,8 @@ function Nx.Warehouse:UpdateItems()
 						if not hdr then
 							hdr = true
 							list:ItemAdd (0)
-							local rname, cname = strsplit (".", rc)
-							local s = format ("---- %s Equipped ----", cname)
+							local rname, cname = Nx.Split (".", rc)
+							local s = format (L["---- %s Equipped ----"], cname)
 							list:ItemSet (3, s)
 						end
 
@@ -1127,7 +2057,7 @@ function Nx.Warehouse:UpdateItems()
 			end
 		end
 
-		list:ColumnSetName (3, "All Items")
+		list:ColumnSetName (3, L["All Items"])
 --[[
 		if Nx.Free then
 			list:ItemAdd (0)
@@ -1140,7 +2070,7 @@ function Nx.Warehouse:UpdateItems()
 	for cn = cn1, cn2 do
 
 		local rc = Nx.RealmChars[cn]
-		local ch = Nx.db.global.Characters[rc]
+		local ch = Nx.wdb.global.Characters[rc]
 
 		local bags = ch["WareBags"]
 
@@ -1154,6 +2084,13 @@ function Nx.Warehouse:UpdateItems()
 
 		if bank then
 			for name, data in pairs (bank) do
+				self:AddItem (items, 3, name, data)
+			end
+		end
+
+		local rbank = ch["WareRBank"]
+		if rbank then
+			for name, data in pairs (rbank) do
 				self:AddItem (items, 3, name, data)
 			end
 		end
@@ -1173,7 +2110,7 @@ function Nx.Warehouse:UpdateItems()
 
 	for name, data in pairs (items) do
 
-		local bagCnt, bankCnt, mailCnt, link = strsplit ("^", data)
+		local bagCnt, bankCnt, mailCnt, link = Nx.Split ("^", data)
 		Nx.Item:Load (link)
 
 		if self.SortByRarity or self.SortBySlot then
@@ -1205,7 +2142,7 @@ function Nx.Warehouse:UpdateItems()
 
 		for _, v in ipairs (isorted) do
 
-			local _, name, bagCnt, bankCnt, mailCnt, link = strsplit ("^", v)
+			local _, name, bagCnt, bankCnt, mailCnt, link = Nx.Split ("^", v)
 			local _, iLink, iRarity = GetItemInfo (link)
 
 			iRarity = iRarity or 0	-- Happens if item not in cache
@@ -1224,7 +2161,7 @@ function Nx.Warehouse:UpdateItems()
 
 			for n = 1, #isorted do
 
-				local _, name, bagCnt, bankCnt, mailCnt, link = strsplit ("^", isorted[n])
+				local _, name, bagCnt, bankCnt, mailCnt, link = Nx.Split ("^", isorted[n])
 				local _, iLink, iRarity, lvl, minLvl, itype = GetItemInfo (link)
 
 				if itype == typ then	-- Found one of type?
@@ -1234,7 +2171,7 @@ function Nx.Warehouse:UpdateItems()
 
 					for n2 = n, #isorted do
 
-						local _, name, bagCnt, bankCnt, mailCnt, link = strsplit ("^", isorted[n2])
+						local _, name, bagCnt, bankCnt, mailCnt, link = Nx.Split ("^", isorted[n2])
 						local _, iLink, iRarity, lvl, minLvl, itype = GetItemInfo (link)
 
 						if itype == typ then
@@ -1250,7 +2187,6 @@ function Nx.Warehouse:UpdateItems()
 			end
 		end
 	end
-
 	list:Update()
 end
 
@@ -1261,10 +2197,10 @@ function Nx.Warehouse:AddItem (items, typ, name, data)
 	local totalMail = 0
 
 	if items[name] then
-		totalBag, totalBank, totalMail = strsplit ("^", items[name])
+		totalBag, totalBank, totalMail = Nx.Split ("^", items[name])
 	end
 
-	local count, iLink = strsplit ("^", data)
+	local count, iLink = Nx.Split ("^", data)
 
 	if typ == 2 then
 		totalBag = totalBag + count
@@ -1282,9 +2218,9 @@ end
 function Nx.Warehouse:UpdateItem (pre, name, bagCnt, bankCnt, mailCnt, link, showILvl)
 
 	local list = self.ItemList
-
+	
 	name = name or link
-
+	
 	bagCnt = tonumber (bagCnt)
 	bankCnt = tonumber (bankCnt)
 	mailCnt = tonumber (mailCnt)
@@ -1292,24 +2228,7 @@ function Nx.Warehouse:UpdateItem (pre, name, bagCnt, bankCnt, mailCnt, link, sho
 	local total = bagCnt + bankCnt + mailCnt
 
 	local str
-
-	if bankCnt + mailCnt == 0 then
-		if bagCnt <= 1 then
-			str = format ("%s", name)
-		else
-			str = format ("%s  |r%s", name, bagCnt)
-		end
-	else
-		str = format ("%s  |r%s", name, bagCnt)
-
-		if bankCnt > 0 then
-			str = format ("%s |cffcfcfff(%s Bank)", str, bankCnt)
-		end
-
-		if mailCnt > 0 then
-			str = format ("%s |cffcfffff(%s Mail)", str, mailCnt)
-		end
-	end
+	str = format ("%s  ", name)
 
 	local iname, iLink, iRarity, lvl, minLvl, itype, subType, stackCount, equipLoc, tx = GetItemInfo (link)
 
@@ -1319,18 +2238,26 @@ function Nx.Warehouse:UpdateItem (pre, name, bagCnt, bankCnt, mailCnt, link, sho
 		minLvl = 0
 	end
 
---	str = str .. " |r" .. itype .. " " .. subType
-
 	iRarity = min (iRarity, 6)		-- Fix Blizz bug with color table only going to 6. Account bound are 6 or 7
 	local col = iRarity == 1 and "|cffe7e7e7" or ITEM_QUALITY_COLORS[iRarity]["hex"]
 
 	local show = true
 	local istr = pre .. col .. str
 
-	if showILvl and lvl then
-		istr = istr .. ",  |ri" .. lvl 
+	local showilvls = {["INVTYPE_HEAD"]=1,["INVTYPE_NECK"]=1,["INVTYPE_SHOULDER"]=1,["INVTYPE_CHEST"]=1,["INVTYPE_ROBE"]=1,["INVTYPE_WAIST"]=1,["INVTYPE_LEGS"]=1,["INVTYPE_FEET"]=1,["INVTYPE_WRIST"]=1,
+						["INVTYPE_HAND"]=1,["INVTYPE_FINGER"]=1,["INVTYPE_TRINKET"]=1,["INVTYPE_CLOAK"]=1,["INVTYPE_WEAPON"]=1,["INVTYPE_SHIELD"]=1,["INVTYPE_2HWEAPON"]=1,["INVTYPE_WEAPONMAINHAND"]=1,
+						["INVTYPE_WEAPONOFFHAND"]=1,["INVTYPE_HOLDABLE"]=1,["INVTYPE_RANGED"]=1,["INVTYPE_THROWN"]=1,["INVTYPE_RANGEDRIGHT"]=1,["INVTYPE_RELIC"]=1}						
+	if lvl and showilvls[equipLoc] then
+		istr = istr .. "|c0000ff00[|rIL " .. lvl .. "|c0000ff00]"
 	end
 
+	if bankCnt > 0 then
+		istr = format (L["%s |cffcfcfff(%s Bank)"], istr, bankCnt)
+	end
+	if mailCnt > 0 then
+		istr = format (L["%s |cffcfffff(%s Mail)"], istr, mailCnt)
+	end	
+	
 	local filterStr = self.EditBox:GetText()
 
 	if filterStr ~= "" then
@@ -1385,8 +2312,9 @@ function Nx.Warehouse:UpdateItem (pre, name, bagCnt, bankCnt, mailCnt, link, sho
 	end
 end
 
---------
+-------------------------------------------------------------------------------
 -- Find all chars who have item
+-------------------------------------------------------------------------------
 
 function Nx.Warehouse:FindCharsWithItem (link, specific)
 
@@ -1405,20 +2333,21 @@ function Nx.Warehouse:FindCharsWithItem (link, specific)
 
 		local bagCnt = 0
 		local bankCnt = 0
+		local rbankCnt = 0
 		local invCnt = 0
 		local mailCnt = 0
 
-		local rname, cname = strsplit (".", rc)
-		if not Nx.db.global.Characters[rc] then
+		local rname, cname = Nx.Split (".", rc)
+		if not Nx.wdb.global.Characters[rc] then
 			return "", 0, 0
 		end
-		local ch = Nx.db.global.Characters[rc]
+		local ch = Nx.wdb.global.Characters[rc]
 
 		local bags = ch["WareBags"]
 
 		if bags then
 			for name, data in pairs (bags) do
-				local iCount, iLink = strsplit ("^", data)
+				local iCount, iLink = Nx.Split ("^", data)
 				local s1, s2, iLink = strfind (iLink, "item:(%d+)")
 				if iLink == link then
 					bagCnt = bagCnt + iCount
@@ -1431,10 +2360,23 @@ function Nx.Warehouse:FindCharsWithItem (link, specific)
 
 		if bank then
 			for name, data in pairs (bank) do
-				local iCount, iLink = strsplit ("^", data)
+				local iCount, iLink = Nx.Split ("^", data)
 				local s1, s2, iLink = strfind (iLink, "item:(%d+)")
 				if iLink == link then
 					bankCnt = bankCnt + iCount
+					break
+				end
+			end
+		end
+
+		local rbank = ch["WareRBank"]
+
+		if rbank then
+			for name, data in pairs (rbank) do
+				local iCount, iLink = Nx.Split ("^", data)
+				local s1, s2, iLink = strfind (iLink, "item:(%d+)")
+				if iLink == link then
+					rbankCnt = rbankCnt + iCount
 					break
 				end
 			end
@@ -1444,20 +2386,19 @@ function Nx.Warehouse:FindCharsWithItem (link, specific)
 
 		if inv then
 			for name, data in pairs (inv) do
-				local slot, iLink = strsplit ("^", data)
+				local slot, iLink = Nx.Split ("^", data)
 				local s1, s2, iLink = strfind (iLink, "item:(%d+)")
 				if iLink == link then
 					invCnt = invCnt + 1
 				end
 			end
-			bagCnt = bagCnt + invCnt	-- Just add to bag cnt
 		end
 
 		local mail = ch["WareMail"]
 
 		if mail then
 			for name, data in pairs (mail) do
-				local iCount, iLink = strsplit ("^", data)
+				local iCount, iLink = Nx.Split ("^", data)
 				local s1, s2, iLink = strfind (iLink, "item:(%d+)")
 				if iLink == link then
 					mailCnt = mailCnt + iCount
@@ -1465,8 +2406,7 @@ function Nx.Warehouse:FindCharsWithItem (link, specific)
 				end
 			end
 		end
-
-		local cnt = bagCnt + bankCnt + mailCnt
+		local cnt = bagCnt + invCnt + bankCnt + rbankCnt + mailCnt
 
 		if cnt > 0 then
 
@@ -1474,20 +2414,40 @@ function Nx.Warehouse:FindCharsWithItem (link, specific)
 			totalCnt = totalCnt + cnt
 
 			local s
-			if bankCnt > 0 then
-				s = format ("%s %d (%d Bank)", cname, bagCnt, bankCnt)
+
+			if invCnt > 0 then
+				s = format (L["%s %d (%d Worn)"], cname, bagCnt, invCnt)
 			else
 				s = format ("%s %d", cname, bagCnt)
 			end
 
+			if bankCnt > 0 then
+				s = format (L["%s (%d Bank)"], s, bankCnt)
+			end
+
+			if rbankCnt > 0 then
+				s = format (L["%s (%d RBank)"], s, rbankCnt)
+			end
+
 			if mailCnt > 0 then
-				s = format ("%s (%s Mail)", s, mailCnt)
+				s = format (L["%s (%s Mail)"], s, mailCnt)
 			end
 			if specific == "tooltip" then
+				s = format ("|cFFFFFF00%s#",cname)
+				if bagCnt > 0 then
+					s = format (L["%s|cFFFF0000[|cFF00FF00Bags:%d|cFFFF0000]"],s,bagCnt)
+				end
+				if invCnt > 0 then
+					s = format (L["%s|cFFFF0000[|cFF00FF00Worn:%d|cFFFF0000]"],s,invCnt)
+				end
+				if mailCnt > 0 then
+					s = format (L["%s|cFFFF0000[|cFF00FF00Mail:%d|cFFFF0000]"],s,mailCnt)
+				end
 				if bankCnt > 0 then
-					s = format ("|cFFFFFF00%s#|cFFFFFF00%d |cFFFF0000[|cFF00FF00Bags:%d|cFFFF0000]|cFFFF0000[|cFF00FF00Bank:%d|cFFFF0000]",cname,bagCnt+bankCnt,bagCnt,bankCnt)
-				else
-					s = format ("|cFFFFFF00%s#|cFFFF0000[|cFF00FF00Bags:%d|cFFFF0000]",cname,bagCnt)				
+					s = format (L["%s|cFFFF0000[|cFF00FF00Bank:%d|cFFFF0000]"],s,bankCnt)
+				end
+				if rbankCnt > 0 then
+					s = format (L["%s|cFFFF0000[|cFF00FF00RBank:%d|cFFFF0000]"],s,rbankCnt)
 				end
 			end
 			if not str then
@@ -1502,7 +2462,7 @@ function Nx.Warehouse:FindCharsWithItem (link, specific)
 		end
 	end
 
---	Nx.prt ("FindCharsWithItem %f secs", GetTime() - tm)	
+--	Nx.prt ("FindCharsWithItem %f secs", GetTime() - tm)
 	return str, charCnt, totalCnt
 end
 
@@ -1514,12 +2474,12 @@ function Nx.Warehouse:UpdateProfessions()
 
 	local cn1 = self.SelectedChar
 	local rc = Nx.RealmChars[cn1]
-	local ch = Nx.db.global.Characters[rc]
+	local ch = Nx.wdb.global.Characters[rc]
 
-	local rname, cname = strsplit (".", rc)
+	local rname, cname = Nx.Split (".", rc)
 	local pname = self.SelectedProf
 
-	list:ColumnSetName (3, format ("%s's %s Skills", cname, pname))
+	list:ColumnSetName (3, format (L["%s's %s Skills"], cname, pname))
 
 	local profsT = ch["Profs"]
 	local profT = profsT[pname]
@@ -1562,7 +2522,7 @@ function Nx.Warehouse:UpdateProfessions()
 
 		for _, str in ipairs (items) do
 
-			local cat, _, name, id = strsplit ("^", str)
+			local cat, _, name, id = Nx.Split ("^", str)
 			local id = tonumber (id)
 
 			local link = GetSpellLink (id)
@@ -1585,15 +2545,6 @@ function Nx.Warehouse:UpdateProfessions()
 			end
 
 			local iStr = col .. name
-
-			if iMinLvl and iMinLvl > 0 then
-				if iMinLvl > UnitLevel ("player") then
-					iStr = format ("%s |cffff4040[%s]", iStr, iMinLvl)
-				else
-					iStr = format ("%s |cff40ff40[%s]", iStr, iMinLvl)
-				end
-			end
-
 			local show = true
 
 			if filterStr ~= "" then
@@ -1610,6 +2561,9 @@ function Nx.Warehouse:UpdateProfessions()
 				end
 
 				list:ItemAdd (itemId)		-- Neg enchant, pos item
+				if iMinLvl and iMinLvl > 0 then
+					list:ItemSet(2, "|cff777777" .. iMinLvl .. " ")
+				end					
 				list:ItemSet (3, iStr)
 				if link then
 					list:ItemSetButton ("WarehouseItem", false, iTx, "#" .. link)
@@ -1620,72 +2574,67 @@ function Nx.Warehouse:UpdateProfessions()
 	else
 
 		list:ItemAdd (0)
-		list:ItemSet (3, format ("|cffff1010No data - open %s window", pname))
+		list:ItemSet (3, format (L["|cffff1010No data - open %s window"], pname))
 	end
 
 	list:Update()
 end
 
---------
+-------------------------------------------------------------------------------
 --
+-------------------------------------------------------------------------------
 
 function Nx.Warehouse:ReftipProcess()
 	if not Nx.wdb.profile.Warehouse.AddTooltip then
 		return
 	end
-	
 	local tip = ItemRefTooltip
-	local name, link = tip:GetItem()	
-	if name then	
---		Nx.prt ("TTItem %s", name or "nil")
-
-		local titleStr = format ("|cffffffffW%sarehouse:", Nx.TXTBLUE)
-
+	local name, link = tip:GetItem()
+	if name then		
+		if Nx.wdb.profile.Warehouse.TooltipIgnore and Nx.wdb.profile.Warehouse.IgnoreList[name] then
+			return
+		end
+		local titleStr = format (L["|cffffffffW%sarehouse:"], Nx.TXTBLUE)
 		local textName = "ItemRefTooltipTextLeft"
-
 		for n = 2, tip:NumLines() do
 			local s1 = strfind (_G[textName .. n]:GetText() or "", titleStr)
 			if s1 then
 				return
 			end
 		end
-
 		local str, count, total = Nx.Warehouse:FindCharsWithItem (link,"tooltip")
-		if total > 1 then
+		if total > 0 then
 			str = gsub (str, "\n", "\n ")
-			local temparray = { strsplit("#",str) }
+			local temparray = { Nx.Split("#",str) }
 			local a = false
-			local char			
+			local char
 			tip:AddLine(titleStr)
 			for i, j in pairs (temparray) do
 				if a == false then
-					a = true					
+					a = true
 					char = j
 				else
 					a = false
 					tip:AddDoubleLine(char,j)
 				end
-			end			
+			end
 			tip:Show()
 		end
 	end
 end
 
 function Nx.Warehouse:TooltipProcess()
-
 	if not Nx.wdb.profile.Warehouse.AddTooltip then
 		return
 	end
-	
 	local tip = GameTooltip
-	local name, link = tip:GetItem()	
-	if name then	
---		Nx.prt ("TTItem %s", name or "nil")
-
-		local titleStr = format ("|cffffffffW%sarehouse:", Nx.TXTBLUE)
-
+	local name, link = tip:GetItem()
+	if name then
+		if Nx.wdb.profile.Warehouse.TooltipIgnore and Nx.wdb.profile.Warehouse.IgnoreList[name] then
+			return
+		end
+		local titleStr = format (L["|cffffffffW%sarehouse:"], Nx.TXTBLUE)
 		local textName = "GameTooltipTextLeft"
-
 		for n = 2, tip:NumLines() do
 			local s1 = strfind (_G[textName .. n]:GetText() or "", titleStr)
 			if s1 then
@@ -1694,28 +2643,29 @@ function Nx.Warehouse:TooltipProcess()
 		end
 
 		local str, count, total = Nx.Warehouse:FindCharsWithItem (link,"tooltip")
-		if total > 1 then
+		if total > 0 then
 			str = gsub (str, "\n", "\n ")
-			local temparray = { strsplit("#",str) }
+			local temparray = { Nx.Split("#",str) }
 			local a = false
-			local char			
+			local char
 			tip:AddLine(titleStr)
 			for i, j in pairs (temparray) do
 				if a == false then
-					a = true					
+					a = true
 					char = j
 				else
 					a = false
 					tip:AddDoubleLine(char,j)
 				end
-			end			
+			end
 			tip:Show()
 		end
 	end
 end
 
---------
+-------------------------------------------------------------------------------
 --
+-------------------------------------------------------------------------------
 
 function Nx.Warehouse:GuildDelete (guildName)
 
@@ -1733,6 +2683,7 @@ end
 -------------------------------------------------------------------------------
 -------------------------------------------------------------------------------
 -- Capture item changes
+-------------------------------------------------------------------------------
 
 function Nx.Warehouse.OnBankframe_opened()
 --	Nx.prt ("Bank open")
@@ -1757,42 +2708,50 @@ function Nx.Warehouse.OnBankframe_closed()
 end
 
 function Nx.Warehouse.OnGuildbankframe_opened()
---	Nx.prt ("GBank open %s", GetGuildBankMoney())
-
 	local self = Nx.Warehouse
-
 	if self.Enabled then
 		self:GuildRecord (true)
 	end
 end
 
 function Nx.Warehouse.OnGuildbankframe_closed()
---	Nx.prt ("GBank close %s", GetGuildBankMoney())
-
 	local self = Nx.Warehouse
-
 	if self.Enabled then
 		self:GuildRecord (true)
 	end
 end
 
 function Nx.Warehouse:GuildRecord (open)
-
+	if not IsInGuild() then
+		return
+	end
 	local gName = GetGuildInfo ("player")
-
 	if gName then
-
 		local ware = Nx.wdb.profile.WarehouseData
 		local rn = GetRealmName()
-
 		local rnGuilds = ware[rn] or {}
 		ware[rn] = rnGuilds
-
 		local guild = rnGuilds[gName] or {}
 		rnGuilds[gName] = guild
-
 		if open then
-			guild["Money"] = GetGuildBankMoney()
+			guild["Money"] = GetGuildBankMoney()						
+			local numTabs = GetNumGuildBankTabs()
+			local name, icon
+			for page = 1, numTabs do
+				guild["Tab" .. page] = {}
+				name, icon = GetGuildBankTabInfo(page)
+				guild["Tab" .. page]["Name"] = name
+				guild["Tab" .. page]["Icon"] = icon
+				guild["Tab" .. page]["ScanTime"] = time()
+				guild["Tab" .. page]["Inv"] = {}
+				for slot = 1, 98 do
+					if GetGuildBankItemLink(page, slot) then
+						local itemString = GetGuildBankItemLink(page, slot)
+						local _, num = GetGuildBankItemInfo(page, slot)
+						guild["Tab" .. page]["Inv"][slot] = format("%s^%s",num,itemString)
+					end
+				end
+			end
 		end
 	end
 end
@@ -1817,7 +2776,7 @@ function Nx.Warehouse.OnMail_inbox_update()
 		return
 	end
 
-	local ch = Nx.CurCharacter
+	local ch = Nx.Warehouse.CurCharacter
 
 	local inv = {}
 	ch["WareMail"] = inv
@@ -1862,11 +2821,11 @@ function Nx.Warehouse.OnItem_lock_changed()
 	end
 
 	if arg1 == KEYRING_CONTAINER or arg1 == BACKPACK_CONTAINER or (arg1 >= 1 and arg1 <= NUM_BAG_SLOTS) or
-			arg1 == BANK_CONTAINER or (arg1 >= NUM_BAG_SLOTS + 1 and arg1 <= NUM_BAG_SLOTS + NUM_BANKBAGSLOTS) then
+			arg1 == BANK_CONTAINER or arg1 == REAGENTBANK_CONTAINER or (arg1 >= NUM_BAG_SLOTS + 1 and arg1 <= NUM_BAG_SLOTS + NUM_BANKBAGSLOTS) then
 
 		self.LockBank = nil
 
-		if arg1 == BANK_CONTAINER or (arg1 >= NUM_BAG_SLOTS + 1 and arg1 <= NUM_BAG_SLOTS + NUM_BANKBAGSLOTS) then
+		if arg1 == BANK_CONTAINER or arg1 == REAGENTBANK_CONTAINER or (arg1 >= NUM_BAG_SLOTS + 1 and arg1 <= NUM_BAG_SLOTS + NUM_BANKBAGSLOTS) then
 			self.LockBank = true
 		end
 
@@ -1896,24 +2855,26 @@ function Nx.Warehouse.OnItem_lock_changed()
 	end
 end
 
---------
+-------------------------------------------------------------------------------
 -- Capture and update UI
+-------------------------------------------------------------------------------
 
 function Nx.Warehouse:CaptureUpdate()
 
 	self:CaptureItems()
 
 	if self.Win then
-		self:Update()		
+		self:Update()
 	end
 end
 
---------
+-------------------------------------------------------------------------------
 -- Capture items
+-------------------------------------------------------------------------------
 
 function Nx.Warehouse:CaptureItems()
 
-	local ch = Nx.CurCharacter
+	local ch = Nx.Warehouse.CurCharacter
 
 --	ch["WareBank"] = nil
 
@@ -1963,13 +2924,22 @@ function Nx.Warehouse:CaptureItems()
 
 --			self:prtdb ("Bank %d", Nx.Util_tcount (inv))
 		end
-
+		Nx.Warehouse:ScanRBank()
 	else
 
 		if self.LockBank and self.LockBag and not self.Locked then
 --			Nx.prt ("Bank add back")
 			self:AddLink (self.LockLink, self.LockCnt, ch["WareBank"])
 		end
+	end
+end
+
+function Nx.Warehouse:ScanRBank()
+	local ch = Nx.Warehouse.CurCharacter
+	inv = {}
+	self:AddBag (REAGENTBANK_CONTAINER, true, inv)
+	if next (inv) then
+		ch["WareRBank"] = inv
 	end
 end
 
@@ -2000,7 +2970,7 @@ function Nx.Warehouse:AddLink (link, count, inv)
 		local total = 0
 
 		if inv[name] then
-			total = strsplit ("^", inv[name])
+			total = Nx.Split ("^", inv[name])
 		end
 
 		total = total + count
@@ -2011,13 +2981,130 @@ function Nx.Warehouse:AddLink (link, count, inv)
 	end
 end
 
---------
+-------------------------------------------------------------------------------
 
 function Nx.Warehouse.OnUnit_inventory_changed()
 
 --	Nx.prt ("OnUNIT_INVENTORY_CHANGED %s", arg1)
 	if arg1 == "player" and not UnitAffectingCombat ("player") and Nx.Info and Nx.Info.NeedDurability then
 		Nx.Warehouse:CaptureInvDurability()
+	end
+end
+
+function Nx.Warehouse.OnMerchant_show()
+	if CanMerchantRepair() and Nx.wdb.profile.Warehouse.RepairAuto then		
+		local cost, canrepair = GetRepairAllCost()		
+		local guildrepaired = false
+		if canrepair then
+			if Nx.wdb.profile.Warehouse.RepairGuild then
+				if (IsInGuild() and CanGuildBankRepair()) then
+					if cost <= GetGuildBankWithdrawMoney() or GetGuildBankWithdrawMoney == -1 then
+						RepairAllItems(1)
+						local moneyStr = Nx.Util_GetMoneyStr(cost)
+						Nx.prt(L["AUTO-REPAIR"] .. ": " .. moneyStr .. " [" .. L["GUILD WITHDRAW"] .. "]")
+						guildrepaired = true
+					end
+				end
+			end
+		end		
+		if not guildrepaired then
+			if cost <= GetMoney() then
+				RepairAllItems()
+				local moneyStr = Nx.Util_GetMoneyStr(cost)
+				Nx.prt(L["AUTO-REPAIR"] .. ": " .. moneyStr)
+			else
+				Nx.prt(L["AUTO-REPAIR"] .. ": " .. L["Not enough funds to repair."])
+			end
+		end
+	end
+	if GetMerchantNumItems() > 0 and not CursorHasItem() then
+		if Nx.wdb.profile.Warehouse.SellGreys or Nx.wdb.profile.Warehouse.SellWhites or Nx.wdb.profile.Warehouse.SellGreens or Nx.wdb.profile.Warehouse.SellBlues or Nx.wdb.profile.Warehouse.SellPurps or Nx.wdb.profile.Warehouse.SellList then
+			local totalearned = 0
+			for bag = 0, NUM_BAG_SLOTS do
+				for slot = 1, GetContainerNumSlots(bag) do
+					local sellit = false
+					local tex, stack, locked, quality, _, _, link = GetContainerItemInfo(bag, slot)
+					if not locked and tex then
+						local name, _, _, lvl, _, _, _, _, _, _, price = GetItemInfo(link)
+						if quality == 0 and Nx.wdb.profile.Warehouse.SellGreys and price > 0 then
+							sellit = true
+						end						
+						if quality == 1 and Nx.wdb.profile.Warehouse.SellWhites and price > 0 then
+							if Nx.wdb.profile.Warehouse.SellWhitesiLVL and lvl < Nx.wdb.profile.Warehouse.SellWhitesiLVLValue then								
+								sellit = true
+							elseif not Nx.wdb.profile.Warehouse.SellWhitesiLVL then
+								sellit = true
+							end
+						end
+						if quality == 2 and Nx.wdb.profile.Warehouse.SellGreens and price > 0 then
+							if Nx.wdb.profile.Warehouse.SellGreensBOE and Nx.Warehouse:GetStorageType(bag, slot, "BOE") then
+								if Nx.wdb.profile.Warehouse.SellGreensiLVL and lvl < Nx.wdb.profile.Warehouse.SellGreensiLVLValue then								
+									sellit = true
+								elseif not Nx.wdb.profile.Warehouse.SellGreensiLVL then
+									sellit = true
+								end							
+							end
+							if Nx.wdb.profile.Warehouse.SellGreensBOP and Nx.Warehouse:GetStorageType(bag, slot, "SOULBOUND") then
+								if Nx.wdb.profile.Warehouse.SellGreensiLVL and lvl < Nx.wdb.profile.Warehouse.SellGreensiLVLValue then								
+									sellit = true
+								elseif not Nx.wdb.profile.Warehouse.SellGreensiLVL then
+									sellit = true
+								end							
+							end							
+						end
+						if quality == 3 and Nx.wdb.profile.Warehouse.SellBlues and price > 0 then
+							if Nx.wdb.profile.Warehouse.SellBluesBOE and Nx.Warehouse:GetStorageType(bag, slot, "BOE") then
+								if Nx.wdb.profile.Warehouse.SellBluesiLVL and lvl < Nx.wdb.profile.Warehouse.SellBluesiLVLValue then								
+									sellit = true
+								elseif not Nx.wdb.profile.Warehouse.SellBluesiLVL then
+									sellit = true
+								end							
+							end
+							if Nx.wdb.profile.Warehouse.SellBluesBOP and Nx.Warehouse:GetStorageType(bag, slot, "SOULBOUND") then
+								if Nx.wdb.profile.Warehouse.SellBluesiLVL and lvl < Nx.wdb.profile.Warehouse.SellBluesiLVLValue then								
+									sellit = true
+								elseif not Nx.wdb.profile.Warehouse.SellBluesiLVL then
+									sellit = true
+								end							
+							end							
+						end				
+						if quality == 4 and Nx.wdb.profile.Warehouse.SellPurps and price > 0 then
+							if Nx.wdb.profile.Warehouse.SellPurpsBOE and Nx.Warehouse:GetStorageType(bag, slot, "BOE") then
+								if Nx.wdb.profile.Warehouse.SellPurpsiLVL and lvl < Nx.wdb.profile.Warehouse.SellPurpsiLVLValue then								
+									sellit = true
+								elseif not Nx.wdb.profile.Warehouse.SellPurpsiLVL then
+									sellit = true
+								end							
+							end
+							if Nx.wdb.profile.Warehouse.SellPurpsBOP and Nx.Warehouse:GetStorageType(bag, slot, "SOULBOUND") then
+								if Nx.wdb.profile.Warehouse.SellPurpsiLVL and lvl < Nx.wdb.profile.Warehouse.SellPurpsiLVLValue then								
+									sellit = true
+								elseif not Nx.wdb.profile.Warehouse.SellPurpsiLVL then
+									sellit = true
+								end							
+							end							
+						end						
+						if Nx.wdb.profile.Warehouse.SellList and Nx.wdb.profile.Warehouse.SellingList[name] then
+							sellit = true
+						end
+						if sellit then
+							if not Nx.wdb.profile.Warehouse.SellTesting then
+								UseContainerItem(bag,slot)
+							end
+							if Nx.wdb.profile.Warehouse.SellVerbose then
+								local moneyStr = Nx.Util_GetMoneyStr(stack * price)
+								Nx.prt(L["Selling"] ..  " ".. name .. " @ " .. moneyStr)
+							end
+							totalearned = totalearned + (stack * price)			
+						end							
+					end
+				end
+			end			
+			if totalearned > 0 then
+				local moneyStr = Nx.Util_GetMoneyStr(totalearned)
+				Nx.prt(L["AUTO-SELL: You Earned"] .. " " .. moneyStr)
+			end
+		end
 	end
 end
 
@@ -2032,7 +3119,29 @@ function Nx.Warehouse:CaptureInvDurability()
 	WarehouseDur = Nx:ScheduleTimer(self.CaptureInvDurabilityTimer,3,self)
 end
 
---------
+function Nx.Warehouse:GetStorageType(bag, slot, checkwhich)
+	CreateFrame("GameTooltip","scan",nil,"GameTooltipTemplate")
+	scan:SetOwner(WorldFrame, "ANCHOR_NONE")
+	scan:ClearLines()
+	scan:SetBagItem(bag, slot)
+	local foundone = false
+	local scannername = scan:GetName()
+	for i = 2,6 do
+		local text = _G[scannername .. "TextLeft" .. i]
+		if text then
+			if text:GetText() == ITEM_SOULBOUND then
+				foundone = "SOULBOUND"
+			elseif text:GetText() == ITEM_BIND_ON_EQUIP then
+				foundone = "BOE"
+			end
+		end
+	end
+	if checkwhich == foundone then
+		return true
+	end
+	return false
+end
+-------------------------------------------------------------------------------
 
 function Nx.Warehouse:CaptureInvDurabilityTimer()
 
@@ -2080,7 +3189,7 @@ function Nx.Warehouse:CaptureInvDurabilityTimer()
 
 --	tip:Hide()
 
-	local ch = Nx.CurCharacter
+	local ch = Nx.Warehouse.CurCharacter
 
 	ch["DurPercent"] = durAll / durAllMax * 100
 	ch["DurLowPercent"] = durLow * 100
@@ -2090,8 +3199,9 @@ function Nx.Warehouse:CaptureInvDurabilityTimer()
 --PAIDE!
 end
 
---------
+-------------------------------------------------------------------------------
 -- Looting
+-------------------------------------------------------------------------------
 
 function Nx.Warehouse.OnLoot_opened()
 
@@ -2107,7 +3217,7 @@ function Nx.Warehouse.OnLoot_opened()
 		self.LootItems[n] = GetLootSlotLink (n)		-- Money is nil
 	end
 
-	self:prtdb ("LOOT_OPENED %s (%s %s)", self.LootTarget, arg1, arg2 or "nil")
+	self:prtdb (L["LOOT_OPENED %s (%s %s)"], self.LootTarget, arg1, arg2 or "nil")
 end
 
 function Nx.Warehouse.OnLoot_slot_cleared()
@@ -2115,14 +3225,14 @@ function Nx.Warehouse.OnLoot_slot_cleared()
 	local self = Nx.Warehouse
 
 	if not self.LootTarget then
-		self:prtdb ("no LootTarget")
+		self:prtdb (L["no LootTarget"])
 		return
 	end
 
 	if self.LootItems[arg1] then
 		local name, iLink, iRarity, lvl, minLvl, iType = GetItemInfo (self.LootItems[arg1])
 		if iType == "Quest" then
-			self:prtdb ("LOOT_SLOT_CLEARED #%s %s (quest)", arg1, self.LootItems[arg1])
+			self:prtdb (L["LOOT_SLOT_CLEARED #%s %s (quest)"], arg1, self.LootItems[arg1])
 			self:Capture (iLink)
 		end
 	end
@@ -2145,10 +3255,10 @@ function Nx.Warehouse:DiffBags (oldBags)
 
 	for name, v in pairs (ch["WareBags"]) do
 
-		local newCnt, link = strsplit ("^", v)
+		local newCnt, link = Nx.Split ("^", v)
 
 		if oldBags[name] then
-			local oldCnt = strsplit ("^", oldBags[name])
+			local oldCnt = Nx.Split ("^", oldBags[name])
 			if newCnt > oldCnt then
 
 				local name, iLink, iRarity, lvl, minLvl, itype = GetItemInfo (link)
@@ -2169,7 +3279,7 @@ end
 --]]
 
 function Nx.Warehouse:Capture (link)
-  
+
 end
 
 function Nx.Warehouse:CaptureGet (t, key)
@@ -2181,8 +3291,9 @@ function Nx.Warehouse:CaptureGet (t, key)
 	return d
 end
 
---------
+-------------------------------------------------------------------------------
 -- Skill message
+-------------------------------------------------------------------------------
 
 function Nx.Warehouse.OnChat_msg_skill()
 
@@ -2196,14 +3307,15 @@ function Nx.Warehouse.OnChat_msg_skill()
 	end
 end
 
---------
+-------------------------------------------------------------------------------
 -- Record 2 professions name rank and riding skill
+-------------------------------------------------------------------------------
 
 function Nx.Warehouse:RecordCharacterSkills()
 
 --	Nx.prt ("Warehouse Rec skill")
 
-	local ch = Nx.CurCharacter
+	local ch = Nx.Warehouse.CurCharacter
 
 	for _, v in pairs (ch["Profs"]) do
 		v.Old = true	-- Flag for delete
@@ -2292,7 +3404,7 @@ function Nx.Warehouse:RecordCharacterSkills()
 	for name, v in pairs (ch["Profs"]) do
 		if v.Old then
 			ch["Profs"][name] = nil
-			Nx.prt ("%s deleted", name)
+			Nx.prt (L["%s deleted"], name)
 		end
 	end
 
@@ -2303,8 +3415,9 @@ end
 
 --PAIDS!
 
---------
+-------------------------------------------------------------------------------
 -- Skill update
+-------------------------------------------------------------------------------
 
 function Nx.Warehouse.OnTrade_skill_update()
 
@@ -2333,59 +3446,47 @@ function Nx.Map.Guide.OnTrade_skill_show()	-- Your own trade window
 end
 --]]
 
---------
+-------------------------------------------------------------------------------
 -- Record profession
+-------------------------------------------------------------------------------
 
 function Nx.Warehouse:RecordProfession()
 
 --	Nx.prt ("Rec #skills %s", GetNumTradeSkills())
 
-	local linked = IsTradeSkillLinked()
+	local linked = C_TradeSkillUI.IsTradeSkillLinked()
 	if linked then
 --		Nx.prt (" Linked, skip")
 		return
 	end
 
-	local cnt = GetNumTradeSkills()
-
-	if cnt == 0 then		-- Not a proper update?
+	local recipies = C_TradeSkillUI.GetAllRecipeIDs()
+	
+	if recipies and #recipies == 0 then	
 		return
 	end
+	
+	local ch = Nx.Warehouse.CurCharacter
 
-	local ch = Nx.CurCharacter
-
-	local title = GetTradeSkillLine()
---	Nx.prt ("Trade %s", title)
-
+	local _,title = C_TradeSkillUI.GetTradeSkillLine()	
+	
 	local profT = ch["Profs"][title]
 	if not profT then
 		return
 	end
 
-	local link = GetTradeSkillListLink()
+	local link = C_TradeSkillUI.GetTradeSkillListLink()
 	if link then
 		profT["Link"] = link
 	end
-
-	for n = 1, cnt do
-
-		local name, typ, available, isExpanded = GetTradeSkillInfo (n)
-		if typ ~= "header" then
-
-			local link = GetTradeSkillRecipeLink (n)	-- Alchemy research causes nil?
-			local rId = link and strmatch (link, "enchant:(%d+)")
-
-			local link = GetTradeSkillItemLink (n)
-			local itemId = link and strmatch (link, "item:(%d+)") or 0
-
-			if rId then
-				profT[tonumber (rId)] = tonumber (itemId)
---			else
---				Nx.prt ("  %s", gsub (link, "|", "||"))
-			end
-
---			Nx.prt ("#%s %s %s", n, name, link)
-		end
+	
+	local recipiesInfo = {}
+	for n = 1, #recipies do
+		C_TradeSkillUI.GetRecipeInfo(recipies[n], recipiesInfo)
+		local rId = recipiesInfo.recipeID
+		local link = C_TradeSkillUI.GetRecipeItemLink (rId)
+		local itemId = link and strmatch (link, L["item:(%d+)"]) or 0					
+		profT[tonumber (rId)] = tonumber (itemId)		
 	end
 end
 
@@ -2393,21 +3494,75 @@ function Nx.Warehouse:OnButToggleWarehouse (but)
 	Nx.Warehouse:ToggleShow()
 end
 
+function Nx.Warehouse:InitWarehouseCharacter()
+	local chars = Nx.wdb.global.Characters
+	local fullName = Nx:GetRealmCharName()
+	local ch = chars[fullName]
+	if not ch then
+		ch = {}
+	end
+	Nx.Warehouse.CurCharacter = ch
+	ch["Profs"] = ch["Profs"] or {}		-- Professions	
+end
+
+function Nx.Warehouse:RecordCharacterLogin()
+	local ch = self.CurCharacter
+	ch["LTime"] = time()
+	ch["LvlTime"] = time()
+	ch["LLevel"] = UnitLevel ("player")
+	ch["Class"] = Nx:GetUnitClass()
+	ch["LMoney"] = GetMoney()
+	ch["LXP"] = UnitXP ("player")
+	ch["LXPMax"] = UnitXPMax ("player")
+	ch["LXPRest"] = GetXPExhaustion() or 0
+	local _, arena = GetCurrencyInfo (390)
+	local _, honor = GetCurrencyInfo (392)
+	ch["LArenaPts"] = arena			--V4 gone GetArenaCurrency()
+	ch["LHonor"] = honor			--V4 gone GetHonorCurrency()
+	Nx.Warehouse:RecordCharacter()
+end
+
+function Nx.Warehouse:RecordCharacter()
+	local ch = self.CurCharacter
+	local map = Nx.Map:GetMap (1)
+	if not ch or not map then
+		return
+	end
+	if map.UpdateMapID then
+		ch["Pos"] = format ("%d^%f^%f", map.UpdateMapID, map.PlyrRZX, map.PlyrRZY)
+	end
+	ch["Time"] = time()
+	ch["Level"] = UnitLevel ("player")
+	ch["Class"] = Nx:GetUnitClass()
+	if ch["Level"] > ch["LLevel"] then	-- Made a level? Reset
+		ch["LLevel"] = ch["Level"]
+		ch["LvlTime"] = time()
+		ch["LXP"] = UnitXP ("player")
+		ch["LXPMax"] = UnitXPMax ("player")
+		ch["LXPRest"] = GetXPExhaustion() or 0
+	end
+	ch["Money"] = GetMoney()
+	ch["XP"] = UnitXP ("player")
+	ch["XPMax"] = UnitXPMax ("player")
+	ch["XPRest"] = GetXPExhaustion() or 0
+	local _, conquest = GetCurrencyInfo (390)
+	local _, honor = GetCurrencyInfo (392)	
+	local _, apexis = GetCurrencyInfo (823)
+	local _, garrison = GetCurrencyInfo (824)
+	local _, orderhall = GetCurrencyInfo (1220)
+	ch["OrderHall"] = orderhall
+	ch["Conquest"] = conquest		--V4 gone GetArenaCurrency()
+	ch["Honor"] = honor			--V4 gone GetHonorCurrency()
+	ch["Apexis"] = apexis
+	ch["Garrison"] = garrison
+	if ch["Valor"] then
+		ch["Valor"] = nil
+	end
+	if ch["Justice"] then
+		ch["Justice"] = nil
+	end
+end
 --PAIDE!
 
 -------------------------------------------------------------------------------
 -- EOF
-
-
-
-
-
-
-
-
-
-
-
-
-
-

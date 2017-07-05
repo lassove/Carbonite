@@ -1,4 +1,4 @@
-local L = LibStub("AceLocale-3.0"):NewLocale("Carbonite.Info", "zhCN", true)
+local L = LibStub("AceLocale-3.0"):NewLocale("Carbonite.Info", "zhCN")
 if not L then return end
 
 L["Info Options"] = "信息模块"
@@ -32,3 +32,7 @@ L["One minute until the Arena"] = "一分钟后进入竞技场"
 L["Thirty seconds until the Arena"] = "半分钟后进入竞技场"
 L["Fifteen seconds until the Arena"] = "十五秒后进入竞技场"
 
+L["Reset old info data %f"] = "重置旧信息数据 %f"
+L[" begins? in (%d+) "] = " 将于 (%d+) 后开始"
+L["(%d+) minutes? until the battle"] = "(%d+) 分钟后开始战斗"
+L["Info"] = "信息"

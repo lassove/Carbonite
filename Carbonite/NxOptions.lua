@@ -1,4 +1,4 @@
-﻿---------------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------
 -- NxOptions - Options
 -- Copyright 2007-2012 Carbon Based Creations, LLC
 ---------------------------------------------------------------------------------------
@@ -36,130 +36,39 @@ local function profilesConfig()
 	if not profiles then
 		profiles = {
 			type = "group",
-			name = L["Profiles"],
-			args = {			
-				line1 = {			
-					type = "description",
-					name = L["You can change the active database profile, so you can have different settings for every character."],
-					order = 1,
+			name = L["Profiles"],			
+			childGroups	= "tab",
+			args = {
+				main = {
+					type = "group",
+					name = L["Main"],
+					order = 1,		
+					args = {},
 				},
-				line2 = {
-					type = "description",
-					name = L["Reset the current profile back to it's default values, in case your configuration is broken, or you simply want to start over."],
-					order = 2,
-				},
-				bigbutton = {
-					type = "execute",
-					name = L["Reset Profile"],
-					width = "normal",
-					func = function () 
-							for a,b in pairs (Nx.dbs) do
-								b:ResetProfile(true,true)
-							end	
-					end,
-					desc = L["Reset the current profile to the defaults"],
-					order = 3,
-				},
-				current = {
-					type = "description",
-					name = L["Current Profile"] .. ": |c00ffff00" .. Nx.db:GetCurrentProfile(),
-					width = "double",
-					order = 4,
-				},
-				line3 = {
-					type = "description",
-					name = L["You can either create a new profile by entering a name in the editbox, or choose one of the already existing profiles."],
-					order = 5,
-				},
-				newprof = {
-					type = "input",
-					name = L["New"],
-					desc = L["Create a new empty profile"],
-					get = false,
-					set = function (info, name)
-						for a,b in pairs(Nx.dbs) do
-							Nx.prt(name)
-							b:SetProfile(name)
-						end
-					end,
-					order = 6,
-				},
-				existing = {
-					type = "select",
-					style = "dropdown",
-					name = L["Existing Profiles"],
-					values = Nx.db:GetProfiles(),
-					get = function ()
-						return Nx.db:GetCurrentProfile()
-					end,
-					set = function (info, name)
-						for a,b in pairs (Nx.dbs) do
-							b:SetProfile(name)
-						end
-					end,
-					desc = L["Select one of your currently available profiles"],
-					order = 7,
-				},
-				linebrk = {
-					type = "description",
-					name = "",
-					width = "full",
-					order = 8,
-				},
-				line4 = {
-					type = "description",
-					name = L["Copy the settings from one existing profile into the currently active profile."],
-					order = 9,
-				},
-				copyfrom = {				
-					type = "select",
-					style = "dropdown",
-					name = L["Existing Profiles"],
-					values = Nx.db:GetProfiles(),
-					get = false,
-					set = function (info, name)
-						for a,b in pairs(Nx.dbs) do
-							b:CopyProfile(name)
-						end
-					end,
-					desc = L["Copy the settings from one existing profile into the currently active profile."],
-					order = 10,			
-				},
-				linebrk2 = {
-					type = "description",
-					name = "",
-					width = "full",
-					order = 11,
-				},
-				line5 = {
-					type = "description",
-					name = L["Delete existing and unused profiles from the database to save space, and cleanup the SavedVariables file."],
-					order = 12,
-				},
-				delete = {				
-					type = "select",
-					style = "dropdown",
-					name = L["Delete a Profile"],
-					get = false,
-					set = function (info, name)
-						for a,b in pairs(Nx.dbs) do
-							b:DeleteProfile(name)
-						end
-					end,					
-					values = Nx.db:GetProfiles(),
-					desc = L["Deletes a profile from the database."],
-					order = 13,			
-				},				
 			},
 		}
 	end
+	profiles.args.main.args.profiles = LibStub("AceDBOptions-3.0"):GetOptionsTable(Nx.db)
 	return profiles
+end
+
+function Nx.Opts:AddToProfileMenu(ProfileName,ProfileOrder,ProfileDB)
+	if not profiles then
+		return
+	end
+	profiles.args[ProfileName] = {
+		type = "group",
+		name = ProfileName,
+		order = ProfileOrder,
+		args = {},
+	}
+	profiles.args[ProfileName].args.profiles = LibStub("AceDBOptions-3.0"):GetOptionsTable(ProfileDB)
 end
 
 local config
 
 local function mainConfig()
-	if not config then	
+	if not config then
 		config = {
 			type = "group",
 			name = "Carbonite",
@@ -170,16 +79,26 @@ local function mainConfig()
 					name = L["Main Options"],
 					args = {
 						title = {
-							type = "description", 
+							type = "description",
 							name = L["\nCarbonite is a full featured, powerful map addon providing a versitile easy to use google style map which either can replace or work with the current blizzard maps.\n\nThrough modules it can also be expanded to do even more to help make your game easier."] ..
-							       "\n\n\n|cff9999ff" .. L["Release Version"] .. ": |cffd700ff" .. Nx.VERMAJOR .. "." .. (Nx.VERMINOR*10) .. "\n" ..
-								   "|cff9999ff" .. L["Maintained by"] .. ": |cffd700ffRythal of Moon Guard\n" ..								   
-								   "|cff9999ff" .. L["Website"] .. ": |cffd700ffhttp://www.wowinterface.com/downloads/info12965-Carbonite.html\n"..
-								   "\n"..
-								   "|cd700ffff" .. L["For support, please visit the forums for Carbonite on WoW Interface."] .. "\n"..
-								   "|cd700ffff" .. L["Special thanks to"] .. ": \n\n"..
-								   "|cff9999ff" .. L["Cirax for Carbonite2 Logo"] .. "\n" ..
-								   "|cff9999ff" .. L["JimboBlue for guide location updates and checking"] .. "\n",								   
+								"\n\n\n|cff9999ff" .. L["Release Version"] .. ": |cffd700ff" .. Nx.VERMAJOR .. "." .. (Nx.VERMINOR*10) .. "\n" ..
+								"|cff9999ff" .. L["Maintained by"] .. ": |cffd700ffThe Community.\n" ..
+								"|cff9999ff" .. L["Website"] .. ": |cffd700ffhttp://www.wowinterface.com/downloads/info12965-Carbonite.html\n"..
+								"\n"..
+								"|cd700ffff" .. L["For support, please visit the forums for Carbonite on WoW Interface."] .. "\n"..
+								"|cd700ffff" .. L["Special thanks to"] .. ": \n\n"..
+								"|cff9999ff" .. L["Cirax for Carbonite2 Logo"] .. "\n" ..
+								"|cff9999ff" .. L["ircdirk & atl77 for Quest Database updates"] .. "\n" ..
+								"|cff9999ff" .. L["nelegalno for many cleanups, api fixes"] .. "\n" ..
+								"|cff9999ff" .. L["Naharis for quest watchlist fixes"] .. "\n" ..
+								"|cff9999ff" .. L["JimJoBlue for guide location updates"] .. "\n" ..
+								"|cff9999ff" .. L["Localization Efforts By:"] .. "\n" ..
+								"|cff9999ff" .. L["frFR - powerstrk"] .. "\n" ..
+								"|cff9999ff" .. L["deDE - atl77 & samyonair"] .. "\n" ..
+								"|cff9999ff" .. L["itIT - ThorwaldOdin"] .. "\n" ..
+								"|cff9999ff" .. L["ruRU - NotDead"] .. "\n" ..
+								"|cff9999ff" .. L["zhCN - Raka-loah"] .. "\n" ..
+								"|cff9999ff" .. L["zhTW - kc305chen"] .. "\n",
 						},
 					},
 				},
@@ -194,7 +113,7 @@ end
 
 local battlegrounds
 local function BGConfig()
-	if not battlegrounds then	
+	if not battlegrounds then
 		battlegrounds = {
 			type = "group",
 			name = L["Battlegrounds"],
@@ -205,13 +124,13 @@ local function BGConfig()
 					width = "full",
 					desc = L["Turns on or off displaying your battleground k/d and honor gained in chat during a match."],
 					get = function()
-						return Nx.db.profile.Battleground.ShowStats 
+						return Nx.db.profile.Battleground.ShowStats
 					end,
 					set = function()
 						Nx.db.profile.Battleground.ShowStats = not Nx.db.profile.Battleground.ShowStats
 					end,
 				},
-			},	  
+			},
 		}
 	end
 	return battlegrounds
@@ -231,11 +150,11 @@ local function generalOptions()
 					name = L["Show Login Message"],
 					desc = L["When Enabled, displays the Carbonite loading messages in chat."],
 					get = function()
-						return Nx.db.profile.General.LoginHideVer 
+						return Nx.db.profile.General.LoginHideVer
 					end,
 					set = function()
 						Nx.db.profile.General.LoginHideVer = not Nx.db.profile.General.LoginHideVer
-					end,				
+					end,
 				},
 				loginWin = {
 					order = 2,
@@ -244,12 +163,12 @@ local function generalOptions()
 					name = L["Show Login Graphic"],
 					desc = L["When Enabled, displays the Carbonite graphic during initialization."] .. "\n",
 					get = function()
-						return Nx.db.profile.General.TitleOff 
+						return Nx.db.profile.General.TitleOff
 					end,
 					set = function()
 						Nx.db.profile.General.TitleOff = not Nx.db.profile.General.TitleOff
-					end,				
-				},			
+					end,
+				},
 				loginSnd = {
 					order = 3,
 					type = "toggle",
@@ -261,8 +180,8 @@ local function generalOptions()
 					end,
 					set = function()
 						Nx.db.profile.General.TitleSoundOn = not Nx.db.profile.General.TitleSoundOn
-					end,				
-				},		
+					end,
+				},
 				spacer1 = {
 					order = 4,
 					type = "description",
@@ -270,27 +189,27 @@ local function generalOptions()
 				},
 				chatWindow = {
 					order = 5,
-					type	= "select",
-					name	= L["Default Chat Channel"],
-					desc	= L["Allows selection of which chat window to display Carbonite messages"],
+					type = "select",
+					name = L["Default Chat Channel"],
+					desc = L["Allows selection of which chat window to display Carbonite messages"],
 					get	= function()
 						local vals = Nx.Opts:CalcChoices("Chat")
 						for a,b in pairs(vals) do
-						  if (b == Nx.db.profile.General.ChatMsgFrm) then
-						     return a
-						  end
+							if (b == Nx.db.profile.General.ChatMsgFrm) then
+								return a
+							end
 						end
 						return ""
 					end,
 					set	= function(info, name)
-						local vals = Nx.Opts:CalcChoices("Chat")						
+						local vals = Nx.Opts:CalcChoices("Chat")
 						Nx.db.profile.General.ChatMsgFrm = vals[name]
 						Nx.Opts:NXCmdUIChange()
 					end,
 					values	= function()
-					    return Nx.Opts:CalcChoices("Chat")
+						return Nx.Opts:CalcChoices("Chat")
 					end,
-				},				
+				},
 				spacer2 = {
 					order = 6,
 					type = "description",
@@ -308,8 +227,8 @@ local function generalOptions()
 					set = function()
 						Nx.db.profile.General.CameraForceMaxDist = not Nx.db.profile.General.CameraForceMaxDist
 						Nx.Opts:NXCmdCamForceMaxDist()
-					end,				
-				},		
+					end,
+				},
 				hideGriff = {
 					order = 8,
 					type = "toggle",
@@ -322,8 +241,8 @@ local function generalOptions()
 					set = function()
 						Nx.db.profile.General.GryphonsHide = not Nx.db.profile.General.GryphonsHide
 						Nx.Opts:NXCmdGryphonsUpdate()
-					end,				
-				},						
+					end,
+				},
 			},
 		}
 	end
@@ -339,9 +258,9 @@ local function mapConfig ()
 			childGroups	= "tab",
 			args = {
 				mainMap = {
+					order = 1,
 					type = "group",
 					name = L["Map Options"],
-					order = 1,
 					args = {
 						maxMap = {
 							order = 1,
@@ -353,24 +272,37 @@ local function mapConfig ()
 								return Nx.db.profile.Map.MaxOverride
 							end,
 							set = function()
-								Nx.db.profile.Map.MaxOverride = not Nx.db.profile.Map.MaxOverride							
-							end,				
-						},			
-						compatability = {
+								Nx.db.profile.Map.MaxOverride = not Nx.db.profile.Map.MaxOverride
+							end,
+						},
+						Compatibility = {
 							order = 2,
 							type = "toggle",
 							width = "full",
-							name = L["Enable Compatability Mode"],
+							name = L["Enable Combat Compatibility Mode"],
 							desc = L["When Enabled, Carbonite will performe combat checks before any map/window functions. This eliminates other UI's from causing protected mode errors."],
 							get = function()
-								return Nx.db.profile.Map.Compatability
+								return Nx.db.profile.Map.Compatibility
 							end,
 							set = function()
-								Nx.db.profile.Map.Compatability = not Nx.db.profile.Map.Compatability
+								Nx.db.profile.Map.Compatibility = not Nx.db.profile.Map.Compatibility
+							end,
+						},
+						hidecombat = {
+							order = 3,
+							type = "toggle",
+							width = "full",
+							name = L["Hide Map In Combat"],
+							desc = L["If large map is open when you enter combat attempts to hide it."],
+							get = function()
+								return Nx.db.profile.Map.HideCombat
+							end,
+							set = function()
+								Nx.db.profile.Map.HideCombat = not Nx.db.profile.Map.HideCombat
 							end,
 						},
 						centerMap = {
-							order = 2,
+							order = 4,
 							type = "toggle",
 							width = "full",
 							name = L["Center map when maximizing"] .. "\n",
@@ -380,10 +312,10 @@ local function mapConfig ()
 							end,
 							set = function()
 								Nx.db.profile.Map.MaxCenter = not Nx.db.profile.Map.MaxCenter
-							end,				
-						},							  						
+							end,
+						},
 						mouseIgnore = {
-							order = 3,
+							order = 5,
 							type = "toggle",
 							width = "full",
 							name = L["Ignore mouse on map except when ALT is pressed"] .. "\n",
@@ -392,11 +324,11 @@ local function mapConfig ()
 								return Nx.db.profile.Map.MouseIgnore
 							end,
 							set = function()
-								Nx.db.profile.Map.MouseIgnore = not Nx.db.profile.Map.MouseIgnore							
-							end,				
-						},							  						
+								Nx.db.profile.Map.MouseIgnore = not Nx.db.profile.Map.MouseIgnore
+							end,
+						},
 						maxMouseIgnore = {
-							order = 4,
+							order = 6,
 							type = "toggle",
 							width = "full",
 							name = L["Ignore mouse on full-sized map except when ALT is pressed"] .. "\n",
@@ -406,10 +338,12 @@ local function mapConfig ()
 							end,
 							set = function()
 								Nx.db.profile.Map.MaxMouseIgnore = not Nx.db.profile.Map.MaxMouseIgnore
-							end,				
+							end,
 						},
-						ownMap = {
-							order = 5,
+--[[						Doesn't work for now.
+
+							ownMap = {
+							order = 7,
 							type = "toggle",
 							width = "full",
 							name = L["Move Worldmap Data into Maximized Map"] .. "\n",
@@ -419,10 +353,11 @@ local function mapConfig ()
 							end,
 							set = function()
 								Nx.db.profile.Map.WOwn = not Nx.db.profile.Map.WOwn
-							end,				
-						},				
+							end,
+						}, 
+]]--
 						restoreMap = {
-							order = 6,
+							order = 7,
 							type = "toggle",
 							width = "full",
 							name = L["Close Map instead of minimize"] .. "\n",
@@ -432,16 +367,16 @@ local function mapConfig ()
 							end,
 							set = function()
 								Nx.db.profile.Map.MaxRestoreHide = not Nx.db.profile.Map.MaxRestoreHide
-							end,				
-						},		
+							end,
+						},
 						spacer1 = {
-							order = 7,
+							order = 8,
 							type = "description",
 							name = "\n",
 						},
 						showPals = {
-							order = 8,
-							type = "toggle",							
+							order = 9,
+							type = "toggle",
 							name = L["Show Friends/Guildmates in Cities"],
 							width = "full",
 							desc = L["When enabled, will attempt to draw a marker on the map for friends & guildmates positions."],
@@ -450,11 +385,11 @@ local function mapConfig ()
 							end,
 							set = function()
 								Nx.db.profile.Map.ShowPalsInCities = not Nx.db.profile.Map.ShowPalsInCities
-							end,				
+							end,
 						},
 						showOthers = {
-							order = 9,
-							type = "toggle",							
+							order = 10,
+							type = "toggle",
 							width = "full",
 							name = L["Show Other people in Cities"],
 							desc = L["When enabled, will attempt to draw a marker on the map for other Carbonite users."],
@@ -463,11 +398,11 @@ local function mapConfig ()
 							end,
 							set = function()
 								Nx.db.profile.Map.ShowOthersInCities = not Nx.db.profile.Map.ShowOthersInCities
-							end,				
+							end,
 						},
 						showOthersZ = {
-							order = 10,
-							type = "toggle",			
+							order = 11,
+							type = "toggle",
 							width = "full",
 							name = L["Show Other people In Zone"],
 							desc = L["When enabled, will attempt to draw a marker on the map for other Carbonite users."],
@@ -476,16 +411,16 @@ local function mapConfig ()
 							end,
 							set = function()
 								Nx.db.profile.Map.ShowOthersInZone = not Nx.db.profile.Map.ShowOthersInZone
-							end,				
+							end,
 						},
 						spacer2 = {
-							order = 11,
+							order = 12,
 							type = "description",
 							name = "\n",
-						},				
+						},
 						restoreScale = {
-							order = 12,
-							type = "toggle",							
+							order = 13,
+							type = "toggle",
 							name = L["Restore map scale after track"],
 							width = "full",
 							desc = L["When enabled, restores your previous map scale when tracking is cleared."],
@@ -494,11 +429,11 @@ local function mapConfig ()
 							end,
 							set = function()
 								Nx.db.profile.Map.RestoreScaleAfterTrack = not Nx.db.profile.Map.RestoreScaleAfterTrack
-							end,				
+							end,
 						},
 						useRoute = {
-							order = 13,
-							type = "toggle",							
+							order = 14,
+							type = "toggle",
 							name = L["Use Travel Routing"],
 							width = "full",
 							desc = L["When enabled, attempts to route your travel when destination is in another zone."],
@@ -507,29 +442,16 @@ local function mapConfig ()
 							end,
 							set = function()
 								Nx.db.profile.Map.RouteUse = not Nx.db.profile.Map.RouteUse
-							end,				
-						},						
-						restoreScale = {
-							order = 14,
-							type = "toggle",							
-							name = L["Restore map scale after track"],
-							width = "full",
-							desc = L["When enabled, restores your previous map scale when tracking is cleared."],
-							get = function()
-								return Nx.db.profile.Map.RestoreScaleAfterTrack
 							end,
-							set = function()
-								Nx.db.profile.Map.RestoreScaleAfterTrack = not Nx.db.profile.Map.RestoreScaleAfterTrack
-							end,				
-						},				
+						},
 						spacer3 = {
 							order = 15,
 							type = "description",
 							name = "\n",
-						},				
+						},
 						showTrail = {
 							order = 16,
-							type = "toggle",							
+							type = "toggle",
 							name = L["Show Movement Trail"],
 							width = "full",
 							desc = L["When enabled, draws a trail on the map to show your movements."],
@@ -538,11 +460,11 @@ local function mapConfig ()
 							end,
 							set = function()
 								Nx.db.profile.Map.ShowTrail = not Nx.db.profile.Map.ShowTrail
-							end,				
-						},									
+							end,
+						},
 						trailDist = {
 							order = 17,
-							type = "range",							
+							type = "range",
 							name = L["Movement trail distance"],
 							desc = L["sets the distance of movement between the trail marks"],
 							min = .1,
@@ -554,11 +476,11 @@ local function mapConfig ()
 							end,
 							set = function(info,value)
 								Nx.db.profile.Map.TrailDist = value
-							end,				
+							end,
 						},
 						trailCnt = {
 							order = 18,
-							type = "range",							
+							type = "range",
 							name = L["Movement dot count"],
 							desc = L["sets the number of movement dots to draw on the map"],
 							min = 0,
@@ -570,11 +492,11 @@ local function mapConfig ()
 							end,
 							set = function(info,value)
 								Nx.db.profile.Map.TrailCnt = value
-							end,				
-						},				
+							end,
+						},
 						trailTime = {
 							order = 19,
-							type = "range",							
+							type = "range",
 							name = L["Movement trail fade time"],
 							desc = L["sets the time trail marks last on the map (in seconds)"],
 							min = 0,
@@ -586,16 +508,16 @@ local function mapConfig ()
 							end,
 							set = function(info,value)
 								Nx.db.profile.Map.TrailTime = value
-							end,				
-						},						
+							end,
+						},
 						spacer4 = {
 							order = 20,
 							type = "description",
 							name = "\n",
-						},					
+						},
 						showToolBar = {
 							order = 21,
-							type = "toggle",							
+							type = "toggle",
 							name = L["Show Map Toolbar"],
 							width = "full",
 							desc = L["When enabled, shows the quickbutton toolbar on the map."],
@@ -605,7 +527,7 @@ local function mapConfig ()
 							set = function()
 								Nx.db.profile.Map.ShowToolBar = not Nx.db.profile.Map.ShowToolBar
 								Nx.Opts:NXCmdMapToolBarUpdate()
-							end,				
+							end,
 						},
 						TooltipAnchor = {
 							order = 22,
@@ -623,7 +545,7 @@ local function mapConfig ()
 							end,
 							set	= function(info, name)
 								local vals = Nx.Opts:CalcChoices("Anchor0")
-								Nx.db.profile.Map.LocTipAnchor = vals[name]								
+								Nx.db.profile.Map.LocTipAnchor = vals[name]
 							end,
 							values	= function()
 								return Nx.Opts:CalcChoices("Anchor0")
@@ -645,15 +567,15 @@ local function mapConfig ()
 							end,
 							set	= function(info, name)
 								local vals = Nx.Opts:CalcChoices("Anchor0")
-								Nx.db.profile.Map.LocTipAnchorRel = vals[name]								
+								Nx.db.profile.Map.LocTipAnchorRel = vals[name]
 							end,
 							values	= function()
 								return Nx.Opts:CalcChoices("Anchor0")
 							end,
-						},		
+						},
 						TopToolTip = {
 							order = 24,
-							type = "toggle",							
+							type = "toggle",
 							name = L["Show All Tooltips Above Map"],
 							width = "full",
 							desc = L["When enabled, makes sure the map tooltips are always on the top layer."],
@@ -661,12 +583,12 @@ local function mapConfig ()
 								return Nx.db.profile.Map.TopTooltip
 							end,
 							set = function()
-								Nx.db.profile.Map.TopTooltip = not Nx.db.profile.Map.TopTooltip								
-							end,				
-						},				
+								Nx.db.profile.Map.TopTooltip = not Nx.db.profile.Map.TopTooltip
+							end,
+						},
 						showTitleName = {
 							order = 25,
-							type = "toggle",							
+							type = "toggle",
 							name = L["Show Map Name"],
 							desc = L["When enabled, shows current map zone name in the titlebar."],
 							get = function()
@@ -674,11 +596,11 @@ local function mapConfig ()
 							end,
 							set = function()
 								Nx.db.profile.Map.ShowTitleName = not Nx.db.profile.Map.ShowTitleName
-							end,				
+							end,
 						},
 						showTitleXY = {
 							order = 26,
-							type = "toggle",							
+							type = "toggle",
 							name = L["Show Coordinates"],
 							desc = L["When enabled, Shows your current coordinates in the titlebar."],
 							get = function()
@@ -686,11 +608,11 @@ local function mapConfig ()
 							end,
 							set = function()
 								Nx.db.profile.Map.ShowTitleXY = not Nx.db.profile.Map.ShowTitleXY
-							end,				
+							end,
 						},
 						showTitleSpeed = {
 							order = 27,
-							type = "toggle",							
+							type = "toggle",
 							name = L["Show Speed"],
 							desc = L["When enabled, Shows your current movement speed in the titlebar."],
 							get = function()
@@ -698,11 +620,11 @@ local function mapConfig ()
 							end,
 							set = function()
 								Nx.db.profile.Map.ShowTitleSpeed = not Nx.db.profile.Map.ShowTitleSpeed
-							end,				
+							end,
 						},
 						showTitle2 = {
 							order = 28,
-							type = "toggle",							
+							type = "toggle",
 							name = L["Show Second Title Line"],
 							width = "full",
 							desc = L["When enabled, Shows a second line of info in the titlebar with PVP & subzone info. (REQUIRES RELOAD)"],
@@ -712,16 +634,16 @@ local function mapConfig ()
 							set = function()
 								Nx.db.profile.Map.ShowTitle2 = not Nx.db.profile.Map.ShowTitle2
 								Nx.Opts.NXCmdReload()
-							end,				
-						},						
+							end,
+						},
 						spacer5 = {
 							order = 29,
 							type = "description",
 							name = "\n",
-						},									
+						},
 						showPOI = {
 							order = 30,
-							type = "toggle",							
+							type = "toggle",
 							name = L["Show Map POI"],
 							width = "full",
 							desc = L["When enabled, shows Points of Interest on the map."],
@@ -729,17 +651,17 @@ local function mapConfig ()
 								return Nx.db.profile.Map.ShowPOI
 							end,
 							set = function()
-								Nx.db.profile.Map.ShowPOI = not Nx.db.profile.Map.ShowPOI								
-							end,				
-						},									
+								Nx.db.profile.Map.ShowPOI = not Nx.db.profile.Map.ShowPOI
+							end,
+						},
 						spacer6 = {
 							order = 31,
 							type = "description",
 							name = "\n",
-						},															
+						},
 						plyrArrowSize = {
 							order = 32,
-							type = "range",							
+							type = "range",
 							name = L["Player Arrow Size"],
 							width = "double",
 							desc = L["Sets the size of the player arrow on the map"],
@@ -752,12 +674,12 @@ local function mapConfig ()
 							end,
 							set = function(info,value)
 								Nx.db.profile.Map.PlyrArrowSize = value
-							end,				
-						},		
+							end,
+						},
 						iconScaleMin = {
 							order = 33,
-							type = "range",	
-							width = "double",							
+							type = "range",
+							width = "double",
 							name = L["Icon Scale Min"],
 							desc = L["Sets the smallest size for icons on the map while zooming (-1 disabled any size changes)"],
 							min = -1,
@@ -769,11 +691,11 @@ local function mapConfig ()
 							end,
 							set = function(info,value)
 								Nx.db.profile.Map.IconScaleMin = value
-							end,				
-						},		
+							end,
+						},
 						mapLineThick = {
 							order = 34,
-							type = "range",							
+							type = "range",
 							width = "double",
 							name = L["Map Health Bar Thickness"],
 							desc = L["Sets the thickness of the health bar (0 disables)"],
@@ -786,11 +708,11 @@ local function mapConfig ()
 							end,
 							set = function(info,value)
 								Nx.db.profile.Map.LineThick = value
-							end,				
-						},		
+							end,
+						},
 						zoneDrawCnt = {
 							order = 35,
-							type = "range",							
+							type = "range",
 							width = "double",
 							name = L["Maximum Zones To Draw At Once"],
 							desc = L["Sets the number of zones you can display at once on the map"],
@@ -803,11 +725,11 @@ local function mapConfig ()
 							end,
 							set = function(info,value)
 								Nx.db.profile.Map.ZoneDrawCnt = value
-							end,				
-						},						
+							end,
+						},
 						detailSize = {
 							order = 36,
-							type = "range",							
+							type = "range",
 							name = L["Detail Graphics Visible Area"],
 							width = "double",
 							desc = L["Sets the area size available when zoomed into satellite mode on the map (REQUIRES RELOAD)"],
@@ -820,24 +742,24 @@ local function mapConfig ()
 							end,
 							set = function(info,value)
 								Nx.db.profile.Map.DetailSize = value
-								Nx.Opts.NXCmdReload()								
-							end,				
-						},					
+								Nx.Opts.NXCmdReload()
+							end,
+						},
 						spacer7 = {
 							order = 37,
 							type = "description",
 							name = "\n",
-						},			
+						},
 						header = {
-							order	= 38,
-							type	= "header",
-							name	= L["Map Mouse Button Binds"],
-						},						
+							order = 38,
+							type = "header",
+							name = L["Map Mouse Button Binds"],
+						},
 						ButLAlt = {
 							order = 39,
-							type	= "select",
-							name	= "           " .. L["Alt Left Click"],
-							desc	= L["Sets the action performed when left clicking holding ALT"],
+							type = "select",
+							name = "           " .. L["Alt Left Click"],
+							desc = L["Sets the action performed when left clicking holding ALT"],
 							get	= function()
 								local vals = Nx.Opts:CalcChoices("MapFunc")
 								for a,b in pairs(vals) do
@@ -849,12 +771,12 @@ local function mapConfig ()
 							end,
 							set	= function(info, name)
 								local vals = Nx.Opts:CalcChoices("MapFunc")
-								Nx.db.profile.Map.ButLAlt = vals[name]								
+								Nx.db.profile.Map.ButLAlt = vals[name]
 							end,
 							values	= function()
 								return Nx.Opts:CalcChoices("MapFunc")
 							end,
-						},		
+						},
 						ButLCtrl = {
 							order = 40,
 							type	= "select",
@@ -871,12 +793,12 @@ local function mapConfig ()
 							end,
 							set	= function(info, name)
 								local vals = Nx.Opts:CalcChoices("MapFunc")
-								Nx.db.profile.Map.ButLCtrl = vals[name]								
+								Nx.db.profile.Map.ButLCtrl = vals[name]
 							end,
 							values	= function()
 								return Nx.Opts:CalcChoices("MapFunc")
 							end,
-						},								
+						},
 						ButM = {
 							order = 41,
 							type	= "select",
@@ -893,12 +815,12 @@ local function mapConfig ()
 							end,
 							set	= function(info, name)
 								local vals = Nx.Opts:CalcChoices("MapFunc")
-								Nx.db.profile.Map.ButM = vals[name]								
+								Nx.db.profile.Map.ButM = vals[name]
 							end,
 							values	= function()
 								return Nx.Opts:CalcChoices("MapFunc")
 							end,
-						},								
+						},
 						ButMAlt = {
 							order = 42,
 							type	= "select",
@@ -915,16 +837,16 @@ local function mapConfig ()
 							end,
 							set	= function(info, name)
 								local vals = Nx.Opts:CalcChoices("MapFunc")
-								Nx.db.profile.Map.ButMAlt = vals[name]								
+								Nx.db.profile.Map.ButMAlt = vals[name]
 							end,
 							values	= function()
 								return Nx.Opts:CalcChoices("MapFunc")
 							end,
-						},								
+						},
 						ButMCtrl = {
 							order = 43,
 							type	= "select",
-							name	= "           " .. L["Ctrl Left Click"],
+							name	= "           " .. L["Ctrl Middle Click"],
 							desc	= L["Sets the action performed when middle clicking holding CTRL"],
 							get	= function()
 								local vals = Nx.Opts:CalcChoices("MapFunc")
@@ -937,12 +859,12 @@ local function mapConfig ()
 							end,
 							set	= function(info, name)
 								local vals = Nx.Opts:CalcChoices("MapFunc")
-								Nx.db.profile.Map.ButMCtrl = vals[name]								
+								Nx.db.profile.Map.ButMCtrl = vals[name]
 							end,
 							values	= function()
 								return Nx.Opts:CalcChoices("MapFunc")
 							end,
-						},								
+						},
 						ButR = {
 							order = 44,
 							type	= "select",
@@ -959,12 +881,12 @@ local function mapConfig ()
 							end,
 							set	= function(info, name)
 								local vals = Nx.Opts:CalcChoices("MapFunc")
-								Nx.db.profile.Map.ButR = vals[name]								
+								Nx.db.profile.Map.ButR = vals[name]
 							end,
 							values	= function()
 								return Nx.Opts:CalcChoices("MapFunc")
 							end,
-						},								
+						},
 						ButRAlt = {
 							order = 45,
 							type	= "select",
@@ -981,12 +903,12 @@ local function mapConfig ()
 							end,
 							set	= function(info, name)
 								local vals = Nx.Opts:CalcChoices("MapFunc")
-								Nx.db.profile.Map.ButRAlt = vals[name]								
+								Nx.db.profile.Map.ButRAlt = vals[name]
 							end,
 							values	= function()
 								return Nx.Opts:CalcChoices("MapFunc")
 							end,
-						},								
+						},
 						ButRCtrl = {
 							order = 46,
 							type	= "select",
@@ -1003,12 +925,12 @@ local function mapConfig ()
 							end,
 							set	= function(info, name)
 								local vals = Nx.Opts:CalcChoices("MapFunc")
-								Nx.db.profile.Map.ButRCtrl = vals[name]								
+								Nx.db.profile.Map.ButRCtrl = vals[name]
 							end,
 							values	= function()
 								return Nx.Opts:CalcChoices("MapFunc")
 							end,
-						},		
+						},
 						But4 = {
 							order = 47,
 							type	= "select",
@@ -1025,12 +947,12 @@ local function mapConfig ()
 							end,
 							set	= function(info, name)
 								local vals = Nx.Opts:CalcChoices("MapFunc")
-								Nx.db.profile.Map.But4 = vals[name]								
+								Nx.db.profile.Map.But4 = vals[name]
 							end,
 							values	= function()
 								return Nx.Opts:CalcChoices("MapFunc")
 							end,
-						},		
+						},
 						But4Alt = {
 							order = 48,
 							type	= "select",
@@ -1047,12 +969,12 @@ local function mapConfig ()
 							end,
 							set	= function(info, name)
 								local vals = Nx.Opts:CalcChoices("MapFunc")
-								Nx.db.profile.Map.But4Alt = vals[name]								
+								Nx.db.profile.Map.But4Alt = vals[name]
 							end,
 							values	= function()
 								return Nx.Opts:CalcChoices("MapFunc")
 							end,
-						},		
+						},
 						But4Ctrl = {
 							order = 49,
 							type	= "select",
@@ -1069,18 +991,18 @@ local function mapConfig ()
 							end,
 							set	= function(info, name)
 								local vals = Nx.Opts:CalcChoices("MapFunc")
-								Nx.db.profile.Map.But4Ctrl = vals[name]								
+								Nx.db.profile.Map.But4Ctrl = vals[name]
 							end,
 							values	= function()
 								return Nx.Opts:CalcChoices("MapFunc")
 							end,
-						},								
+						},
 					},
 				},
 				miniMap = {
+					order = 2,
 					type = "group",
 					name = L["MiniMap Options"],
-					order = 2,
 					args = {
 						MMOwn = {
 							order = 1,
@@ -1093,16 +1015,16 @@ local function mapConfig ()
 							end,
 							set = function()
 								Nx.db.profile.MiniMap.Own = not Nx.db.profile.MiniMap.Own
-								Nx.Opts:NXCmdMMOwnChange(_,Nx.db.profile.MiniMap.Own)								
-							end,				
-						},							  						  
+								Nx.Opts:NXCmdMMOwnChange(_,Nx.db.profile.MiniMap.Own)
+							end,
+						},
 						spacer1 = {
-							order = 3,
+							order = 2,
 							type = "description",
 							name = "\n",
-						},			
+						},
 						MMSquare = {
-							order = 4,
+							order = 3,
 							type = "toggle",
 							width = "full",
 							name = L["Minimap Shape is Square"],
@@ -1111,11 +1033,11 @@ local function mapConfig ()
 								return Nx.db.profile.MiniMap.Square
 							end,
 							set = function()
-								Nx.db.profile.MiniMap.Square = not Nx.db.profile.MiniMap.Square								
-							end,				
+								Nx.db.profile.MiniMap.Square = not Nx.db.profile.MiniMap.Square
+							end,
 						},
 						MMAboveIcons = {
-							order = 5,
+							order = 4,
 							type = "toggle",
 							width = "full",
 							name = L["Minimap is drawn above icons"],
@@ -1124,12 +1046,12 @@ local function mapConfig ()
 								return Nx.db.profile.MiniMap.AboveIcons
 							end,
 							set = function()
-								Nx.db.profile.MiniMap.AboveIcons = not Nx.db.profile.MiniMap.AboveIcons								
-							end,				
-						},						
+								Nx.db.profile.MiniMap.AboveIcons = not Nx.db.profile.MiniMap.AboveIcons
+							end,
+						},
 						MMIconScale = {
-							order = 6,
-							type = "range",							
+							order = 5,
+							type = "range",
 							name = L["Minimap Icon Scale"],
 							desc = L["Sets the scale of the icons drawn in the minimap portion of the map"],
 							min = .1,
@@ -1141,11 +1063,11 @@ local function mapConfig ()
 							end,
 							set = function(info,value)
 								Nx.db.profile.MiniMap.IScale = value
-							end,				
-						},					
+							end,
+						},
 						MMDockIScale = {
-							order = 7,
-							type = "range",							
+							order = 6,
+							type = "range",
 							name = L["Docked Minimap Icon Scale"],
 							desc = L["Sets the scale of the icons drawn in the minimap portion of the map while docked"],
 							min = .1,
@@ -1157,12 +1079,12 @@ local function mapConfig ()
 							end,
 							set = function(info,value)
 								Nx.db.profile.MiniMap.DockIScale = value
-							end,				
-						},					
-						
+							end,
+						},
+
 						MMGlow = {
-							order = 8,
-							type = "range",							
+							order = 7,
+							type = "range",
 							name = L["Minimap Node Glow Delay"],
 							desc = L["Sets the delay (in seconds) between the glow change on gathering nodes (0 is off)"],
 							min = 0,
@@ -1175,15 +1097,15 @@ local function mapConfig ()
 							set = function(info,value)
 								Nx.db.profile.MiniMap.NodeGD = value
 								Nx.Opts:NXCmdMMChange()
-							end,				
-						},						
+							end,
+						},
 						spacer2 = {
-							order = 9,
+							order = 8,
 							type = "description",
 							name = "\n",
-						},									
+						},
 						MMDockAlways = {
-							order = 10,
+							order = 9,
 							type = "toggle",
 							width = "full",
 							name = L["Always dock minimap"],
@@ -1192,11 +1114,11 @@ local function mapConfig ()
 								return Nx.db.profile.MiniMap.DockAlways
 							end,
 							set = function()
-								Nx.db.profile.MiniMap.DockAlways = not Nx.db.profile.MiniMap.DockAlways								
-							end,				
-						},				
+								Nx.db.profile.MiniMap.DockAlways = not Nx.db.profile.MiniMap.DockAlways
+							end,
+						},
 						MMDockIndoors = {
-							order = 11,
+							order = 10,
 							type = "toggle",
 							width = "full",
 							name = L["Dock The Minimap when indoors"],
@@ -1206,10 +1128,10 @@ local function mapConfig ()
 							end,
 							set = function()
 								Nx.db.profile.MiniMap.DockIndoors = not Nx.db.profile.MiniMap.DockIndoors
-							end,				
-						},												
+							end,
+						},
 						MMDockBugged = {
-							order = 12,
+							order = 11,
 							type = "toggle",
 							width = "full",
 							name = L["Dock The Minimap in Bugged Zones"],
@@ -1219,10 +1141,10 @@ local function mapConfig ()
 							end,
 							set = function()
 								Nx.db.profile.MiniMap.DockBugged = not Nx.db.profile.MiniMap.DockBugged
-							end,				
-						},						
+							end,
+						},
 						MMDockOnMax = {
-							order = 13,
+							order = 12,
 							type = "toggle",
 							width = "full",
 							name = L["Dock The Minimap when Fullsized"],
@@ -1231,11 +1153,11 @@ local function mapConfig ()
 								return Nx.db.profile.MiniMap.DockOnMax
 							end,
 							set = function()
-								Nx.db.profile.MiniMap.DockOnMax = not Nx.db.profile.MiniMap.DockOnMax								
-							end,				
-						},		
+								Nx.db.profile.MiniMap.DockOnMax = not Nx.db.profile.MiniMap.DockOnMax
+							end,
+						},
 						MMHideOnMax = {
-							order = 14,
+							order = 13,
 							type = "toggle",
 							width = "full",
 							name = L["Hide The Minimap when Fullsized"],
@@ -1245,11 +1167,11 @@ local function mapConfig ()
 							end,
 							set = function()
 								Nx.db.profile.MiniMap.HideOnMax = not Nx.db.profile.MiniMap.HideOnMax
-							end,				
-						},						
-						
+							end,
+						},
+
 						MMDockSquare = {
-							order = 15,
+							order = 14,
 							type = "toggle",
 							width = "full",
 							name = L["Minimap Docked Shape is Square"],
@@ -1259,10 +1181,10 @@ local function mapConfig ()
 							end,
 							set = function()
 								Nx.db.profile.MiniMap.DockSquare = not Nx.db.profile.MiniMap.DockSquare
-							end,				
-						},						
+							end,
+						},
 						MMDockBottom = {
-							order = 16,
+							order = 15,
 							type = "toggle",
 							width = "full",
 							name = L["Minimap Docks Bottom"],
@@ -1272,10 +1194,10 @@ local function mapConfig ()
 							end,
 							set = function()
 								Nx.db.profile.MiniMap.DockBottom = not Nx.db.profile.MiniMap.DockBottom
-							end,				
-						},						
+							end,
+						},
 						MMDockRight = {
-							order = 17,
+							order = 16,
 							type = "toggle",
 							width = "full",
 							name = L["Minimap Docks Right"],
@@ -1285,42 +1207,42 @@ local function mapConfig ()
 							end,
 							set = function()
 								Nx.db.profile.MiniMap.DockRight = not Nx.db.profile.MiniMap.DockRight
-							end,				
-						},										
+							end,
+						},
 						MMDXO = {
-							order = 18,
-							type = "range",							
+							order = 17,
+							type = "range",
 							name = L["Minimap Dock X-Offset"],
 							desc = L["Sets the X - offset the minimap draws while docked"],
-							min = 0,
-							max = 200,
+							min = -2000,
+							max = 2000,
 							step = 1,
-							bigStep = 1,
+							bigStep = 25,
 							get = function()
 								return Nx.db.profile.MiniMap.DXO
 							end,
 							set = function(info,value)
 								Nx.db.profile.MiniMap.DXO = value
-							end,				
-						},					
+							end,
+						},
 						MMDYO = {
-							order = 19,
-							type = "range",							
+							order = 18,
+							type = "range",
 							name = L["Minimap Dock Y-Offset"],
 							desc = L["Sets the Y - offset the minimap draws while docked"],
-							min = 0,
-							max = 200,
+							min = -2000,
+							max = 2000,
 							step = 1,
-							bigStep = 1,
+							bigStep = 25,
 							get = function()
 								return Nx.db.profile.MiniMap.DYO
 							end,
 							set = function(info,value)
 								Nx.db.profile.MiniMap.DYO = value
-							end,				
+							end,
 						},
 						MMIndoorTogFullSize = {
-							order = 20,
+							order = 19,
 							type = "toggle",
 							width = "full",
 							name = L["Minimap goes full sized Indoors"],
@@ -1330,10 +1252,10 @@ local function mapConfig ()
 							end,
 							set = function()
 								Nx.db.profile.MiniMap.IndoorTogFullSize = not Nx.db.profile.MiniMap.IndoorTogFullSize
-							end,				
+							end,
 						},
 						MMDockBuggedTogFullSize = {
-							order = 21,
+							order = 20,
 							type = "toggle",
 							width = "full",
 							name = L["Minimap goes full sized in bugged areas"],
@@ -1343,10 +1265,10 @@ local function mapConfig ()
 							end,
 							set = function()
 								Nx.db.profile.MiniMap.BuggedTogFullSize = not Nx.db.profile.MiniMap.BuggedTogFullSize
-							end,				
+							end,
 						},
 						MMDockInstanceTogFullSize = {
-							order = 22,
+							order = 21,
 							type = "toggle",
 							width = "full",
 							name = L["Minimap goes full sized in instances"],
@@ -1356,10 +1278,10 @@ local function mapConfig ()
 							end,
 							set = function()
 								Nx.db.profile.MiniMap.InstanceTogFullSize = not Nx.db.profile.MiniMap.InstanceTogFullSize
-							end,				
+							end,
 						},
 						MMMoveCapBars = {
-							order = 23,
+							order = 22,
 							type = "toggle",
 							width = "full",
 							name = L["Move capture bars under map"],
@@ -1369,10 +1291,10 @@ local function mapConfig ()
 							end,
 							set = function()
 								Nx.db.profile.MiniMap.MoveCapBars = not Nx.db.profile.MiniMap.MoveCapBars
-							end,				
+							end,
 						},
 						MMShowOldNameplate = {
-							order = 24,
+							order = 23,
 							type = "toggle",
 							width = "full",
 							name = L["Show Old Nameplates"],
@@ -1383,14 +1305,14 @@ local function mapConfig ()
 							set = function()
 								Nx.db.profile.MiniMap.ShowOldNameplate = not Nx.db.profile.MiniMap.ShowOldNameplate
 								Nx.Opts:NXCmdMMButUpdate()
-							end,				
-						},						
+							end,
+						},
 					},
-				},	
+				},
 				buttonFrame = {
+					order = 3,
 					type = "group",
 					name = L["Minimap Button Options"],
-					order = 3,
 					args = {
 						MMButOwn = {
 							order = 1,
@@ -1404,15 +1326,15 @@ local function mapConfig ()
 							set = function()
 								Nx.db.profile.MiniMap.ButOwn = not Nx.db.profile.MiniMap.ButOwn
 								Nx.Opts:NXCmdReload()
-							end,				
-						},			
+							end,
+						},
 						spacer1 = {
-							order = 3,
+							order = 2,
 							type = "description",
 							name = "\n",
 						},
 						MMButHide = {
-							order = 4,
+							order = 3,
 							type = "toggle",
 							width = "full",
 							name = L["Hide Minimap Button Window"],
@@ -1421,12 +1343,12 @@ local function mapConfig ()
 								return Nx.db.profile.MiniMap.ButHide
 							end,
 							set = function()
-								Nx.db.profile.MiniMap.ButHide = not Nx.db.profile.MiniMap.ButHide								
+								Nx.db.profile.MiniMap.ButHide = not Nx.db.profile.MiniMap.ButHide
 								Nx.Window:SetAttribute("NxMapDock","H",Nx.db.profile.MiniMap.ButHide)
-							end,				
+							end,
 						},
 						MMButLock = {
-							order = 5,
+							order = 4,
 							type = "toggle",
 							width = "full",
 							name = L["Lock Minimap Button Window"],
@@ -1437,16 +1359,16 @@ local function mapConfig ()
 							set = function()
 								Nx.db.profile.MiniMap.ButLock = not Nx.db.profile.MiniMap.ButLock
 								Nx.Window:SetAttribute("NxMapDock","L",Nx.db.profile.MiniMap.ButLock)
-							end,				
+							end,
 						},
 						spacer2 = {
-							order = 6,
+							order = 5,
 							type = "description",
 							name = "\n",
-						},		
+						},
 						MMButColumns = {
-							order = 7,
-							type = "range",							
+							order = 6,
+							type = "range",
 							name = L["# Of Minimap Button Columns"],
 							width = "double",
 							desc = L["Sets the number of columns to be used for minimap icons"],
@@ -1459,11 +1381,11 @@ local function mapConfig ()
 							end,
 							set = function(info,value)
 								Nx.db.profile.MiniMap.ButColumns = value
-							end,				
-						},					
+							end,
+						},
 						MMButSpacing = {
-							order = 8,
-							type = "range",							
+							order = 7,
+							type = "range",
 							name = L["Minimap Button Spacing"],
 							width = "double",
 							desc = L["Sets the spacing between buttons in the minimap button bar"],
@@ -1476,10 +1398,10 @@ local function mapConfig ()
 							end,
 							set = function(info,value)
 								Nx.db.profile.MiniMap.ButSpacing = value
-							end,				
-						},				
+							end,
+						},
 						ButCorner = {
-							order = 9,
+							order = 8,
 							type	= "select",
 							name	= L["Corner For First Button"],
 							desc	= L["Sets the anchor point in multi-column setups for first minimap button"],
@@ -1494,19 +1416,19 @@ local function mapConfig ()
 							end,
 							set	= function(info, name)
 								local vals = Nx.Opts:CalcChoices("Corner")
-								Nx.db.profile.MiniMap.ButCorner = vals[name]								
+								Nx.db.profile.MiniMap.ButCorner = vals[name]
 							end,
 							values	= function()
 								return Nx.Opts:CalcChoices("Corner")
 							end,
-						},						
+						},
 						spacer3 = {
-							order = 10,
+							order = 9,
 							type = "description",
 							name = "\n",
-						},		
+						},
 						MMButShowCarb = {
-							order = 11,
+							order = 10,
 							type = "toggle",
 							width = "full",
 							name = L["Enable Carbonite Minimap Button"],
@@ -1520,7 +1442,7 @@ local function mapConfig ()
 							end,
 						},
 						MMButShowCalendar = {
-							order = 12,
+							order = 11,
 							type = "toggle",
 							width = "full",
 							name = L["Enable Calendar Minimap Button"],
@@ -1534,7 +1456,7 @@ local function mapConfig ()
 							end,
 						},
 						MMButShowClock = {
-							order = 13,
+							order = 12,
 							type = "toggle",
 							width = "full",
 							name = L["Enable Clock Minimap Button"],
@@ -1548,7 +1470,7 @@ local function mapConfig ()
 							end,
 						},
 						MMButShowWorldMap = {
-							order = 14,
+							order = 13,
 							type = "toggle",
 							width = "full",
 							name = L["Enable World Map Minimap Button"],
@@ -1560,8 +1482,8 @@ local function mapConfig ()
 								Nx.db.profile.MiniMap.ButShowWorldMap = not Nx.db.profile.MiniMap.ButShowWorldMap
 								Nx.Opts:NXCmdMMButUpdate()
 							end,
-						},						
-					},	
+						},
+					},
 				},
 			},
 		}
@@ -1571,16 +1493,16 @@ end
 
 local font
 local function fontConfig()
-	if not font then	
+	if not font then
 		font = {
 			type = "group",
 			name = L["Font Options"],
-			args = {	
+			args = {
 				SmallFont = {
 					order = 1,
-					type	= "select",
-					name	= L["Small Font"],
-					desc	= L["Sets the font to be used for small text"],
+					type = "select",
+					name = L["Small Font"],
+					desc = L["Sets the font to be used for small text"],
 					get	= function()
 						local vals = Nx.Opts:CalcChoices("FontFace","Get")
 						for a,b in pairs(vals) do
@@ -1592,16 +1514,16 @@ local function fontConfig()
 					end,
 					set	= function(info, name)
 						local vals = Nx.Opts:CalcChoices("FontFace","Get")
-						Nx.db.profile.Font.Small = vals[name]						
+						Nx.db.profile.Font.Small = vals[name]
 						Nx.Opts:NXCmdFontChange()
 					end,
 					values	= function()
 						return Nx.Opts:CalcChoices("FontFace","Get")
-					end,					
+					end,
 				},
 				SmallFontSize = {
 					order = 2,
-					type = "range",							
+					type = "range",
 					name = L["Small Font Size"],
 					desc = L["Sets the size of the small font"],
 					min = 6,
@@ -1614,11 +1536,11 @@ local function fontConfig()
 					set = function(info,value)
 						Nx.db.profile.Font.SmallSize = value
 						Nx.Opts:NXCmdFontChange()
-					end,				
-				},		
+					end,
+				},
 				SmallFontSpacing = {
 					order = 3,
-					type = "range",							
+					type = "range",
 					name = L["Small Font Spacing"],
 					desc = L["Sets the spacing of the small font"],
 					min = -10,
@@ -1631,13 +1553,13 @@ local function fontConfig()
 					set = function(info,value)
 						Nx.db.profile.Font.SmallSpacing = value
 						Nx.Opts:NXCmdFontChange()
-					end,				
-				},		
+					end,
+				},
 				MediumFont = {
 					order = 4,
-					type	= "select",
-					name	= L["Normal Font"],
-					desc	= L["Sets the font to be used for normal text"],
+					type = "select",
+					name = L["Normal Font"],
+					desc = L["Sets the font to be used for normal text"],
 					get	= function()
 						local vals = Nx.Opts:CalcChoices("FontFace","Get")
 						for a,b in pairs(vals) do
@@ -1649,16 +1571,16 @@ local function fontConfig()
 					end,
 					set	= function(info, name)
 						local vals = Nx.Opts:CalcChoices("FontFace","Get")
-						Nx.db.profile.Font.Medium = vals[name]	
+						Nx.db.profile.Font.Medium = vals[name]
 						Nx.Opts:NXCmdFontChange()
 					end,
 					values	= function()
 						return Nx.Opts:CalcChoices("FontFace","Get")
-					end,					
+					end,
 				},
 				MediumFontSize = {
 					order = 5,
-					type = "range",							
+					type = "range",
 					name = L["Medium Font Size"],
 					desc = L["Sets the size of the normal font"],
 					min = 6,
@@ -1671,11 +1593,11 @@ local function fontConfig()
 					set = function(info,value)
 						Nx.db.profile.Font.MediumSize = value
 						Nx.Opts:NXCmdFontChange()
-					end,				
-				},		
+					end,
+				},
 				MediumFontSpacing = {
 					order = 6,
-					type = "range",							
+					type = "range",
 					name = L["Medium Font Spacing"],
 					desc = L["Sets the spacing of the normal font"],
 					min = -10,
@@ -1688,13 +1610,13 @@ local function fontConfig()
 					set = function(info,value)
 						Nx.db.profile.Font.MediumSpacing = value
 						Nx.Opts:NXCmdFontChange()
-					end,				
-				},					
+					end,
+				},
 				MapFont = {
 					order = 7,
-					type	= "select",
-					name	= L["Map Font"],
-					desc	= L["Sets the font to be used on the map"],
+					type = "select",
+					name = L["Map Font"],
+					desc = L["Sets the font to be used on the map"],
 					get	= function()
 						local vals = Nx.Opts:CalcChoices("FontFace","Get")
 						for a,b in pairs(vals) do
@@ -1706,16 +1628,16 @@ local function fontConfig()
 					end,
 					set	= function(info, name)
 						local vals = Nx.Opts:CalcChoices("FontFace","Get")
-						Nx.db.profile.Font.Map = vals[name]	
+						Nx.db.profile.Font.Map = vals[name]
 						Nx.Opts:NXCmdFontChange()
 					end,
 					values	= function()
 						return Nx.Opts:CalcChoices("FontFace","Get")
-					end,					
+					end,
 				},
 				MapFontSize = {
 					order = 8,
-					type = "range",							
+					type = "range",
 					name = L["Map Font Size"],
 					desc = L["Sets the size of the map font"],
 					min = 6,
@@ -1728,11 +1650,11 @@ local function fontConfig()
 					set = function(info,value)
 						Nx.db.profile.Font.MapSize = value
 						Nx.Opts:NXCmdFontChange()
-					end,				
-				},		
+					end,
+				},
 				MapFontSpacing = {
 					order = 9,
-					type = "range",							
+					type = "range",
 					name = L["Map Font Spacing"],
 					desc = L["Sets the spacing of the map font"],
 					min = -10,
@@ -1745,18 +1667,18 @@ local function fontConfig()
 					set = function(info,value)
 						Nx.db.profile.Font.MapSpacing = value
 						Nx.Opts:NXCmdFontChange()
-					end,				
-				},									
+					end,
+				},
 				spacer = {
+					order = 10,
 					type = "description",
 					name = "",
-					order = 10,
 				},
 				MapLocFont = {
 					order = 11,
-					type	= "select",
-					name	= L["Map Location Tip Font"],
-					desc	= L["Sets the font to be used on the map tooltip"],
+					type = "select",
+					name = L["Map Location Tip Font"],
+					desc = L["Sets the font to be used on the map tooltip"],
 					get	= function()
 						local vals = Nx.Opts:CalcChoices("FontFace","Get")
 						for a,b in pairs(vals) do
@@ -1768,16 +1690,16 @@ local function fontConfig()
 					end,
 					set	= function(info, name)
 						local vals = Nx.Opts:CalcChoices("FontFace","Get")
-						Nx.db.profile.Font.MapLoc = vals[name]	
+						Nx.db.profile.Font.MapLoc = vals[name]
 						Nx.Opts:NXCmdFontChange()
 					end,
 					values	= function()
 						return Nx.Opts:CalcChoices("FontFace","Get")
-					end,					
+					end,
 				},
 				MapLocFontSize = {
 					order = 12,
-					type = "range",							
+					type = "range",
 					name = L["Map Location Tip Font Size"],
 					desc = L["Sets the size of the map tooltip font"],
 					min = 6,
@@ -1790,11 +1712,11 @@ local function fontConfig()
 					set = function(info,value)
 						Nx.db.profile.Font.MapLocSize = value
 						Nx.Opts:NXCmdFontChange()
-					end,				
+					end,
 				},
 				MapLocFontSpacing = {
 					order = 13,
-					type = "range",							
+					type = "range",
 					name = L["Map Loc Font Spacing"],
 					desc = L["Sets the spacing of the map loc font"],
 					min = -10,
@@ -1807,18 +1729,18 @@ local function fontConfig()
 					set = function(info,value)
 						Nx.db.profile.Font.MapLocSpacing = value
 						Nx.Opts:NXCmdFontChange()
-					end,				
-				},									
+					end,
+				},
 				spacer2 = {
+					order = 14,
 					type = "description",
 					name = "",
-					order = 14,
-				},				
+				},
 				MenuFont = {
 					order = 15,
-					type	= "select",
-					name	= L["Menu Font"],
-					desc	= L["Sets the font to be used on the memus"],
+					type = "select",
+					name = L["Menu Font"],
+					desc = L["Sets the font to be used on the memus"],
 					get	= function()
 						local vals = Nx.Opts:CalcChoices("FontFace","Get")
 						for a,b in pairs(vals) do
@@ -1830,16 +1752,16 @@ local function fontConfig()
 					end,
 					set	= function(info, name)
 						local vals = Nx.Opts:CalcChoices("FontFace","Get")
-						Nx.db.profile.Font.Menu = vals[name]	
+						Nx.db.profile.Font.Menu = vals[name]
 						Nx.Opts:NXCmdFontChange()
 					end,
 					values	= function()
 						return Nx.Opts:CalcChoices("FontFace","Get")
-					end,					
+					end,
 				},
 				MenuFontSize = {
 					order = 16,
-					type = "range",							
+					type = "range",
 					name = L["Menu Font Size"],
 					desc = L["Sets the size of the menu font"],
 					min = 6,
@@ -1852,11 +1774,11 @@ local function fontConfig()
 					set = function(info,value)
 						Nx.db.profile.Font.MenuSize = value
 						Nx.Opts:NXCmdFontChange()
-					end,				
-				},				
+					end,
+				},
 				MenuFontSpacing = {
 					order = 17,
-					type = "range",							
+					type = "range",
 					name = L["Menu Font Spacing"],
 					desc = L["Sets the spacing of the menu font"],
 					min = -10,
@@ -1869,8 +1791,8 @@ local function fontConfig()
 					set = function(info,value)
 						Nx.db.profile.Font.MenuSpacing = value
 						Nx.Opts:NXCmdFontChange()
-					end,				
-				},									
+					end,
+				},
 			},
 		}
 	end
@@ -1886,13 +1808,13 @@ local function guidegatherConfig ()
 			childGroups	= "tab",
 			args = {
 				guideOpts = {
+					order = 1,
 					type = "group",
 					name = L["Guide Options"],
-					order = 1,
 					args = {
 						GuideVendorVMax = {
 							order = 1,
-							type = "range",							
+							type = "range",
 							name = L["Max Vendors To Record"],
 							desc = L["Sets the number of vendors you visit that will be held in memory for recall in the guide."],
 							min = 0,
@@ -1903,17 +1825,17 @@ local function guidegatherConfig ()
 								return Nx.db.profile.Guide.VendorVMax
 							end,
 							set = function(info,value)
-								Nx.db.profile.Guide.VendorVMax = value								
-							end,				
-						},						
+								Nx.db.profile.Guide.VendorVMax = value
+							end,
+						},
 					},
 				},
 				gatherOpts = {
+					order = 2,
 					type = "group",
 					name = L["Gather Options"],
-					order = 2,
 					args = {
-						gatherEnable = {						
+						gatherEnable = {
 							order = 1,
 							type = "toggle",
 							width = "full",
@@ -1923,14 +1845,14 @@ local function guidegatherConfig ()
 								return Nx.db.profile.Guide.GatherEnabled
 							end,
 							set = function()
-								Nx.db.profile.Guide.GatherEnabled = not Nx.db.profile.Guide.GatherEnabled								
-							end,							
+								Nx.db.profile.Guide.GatherEnabled = not Nx.db.profile.Guide.GatherEnabled
+							end,
 						},
 						spacer1 = {
 							order = 2,
 							type = "description",
 							name = "\n",
-						},			
+						},
 						CmdDelHerb = {
 							order = 3,
 							type = "execute",
@@ -1948,1363 +1870,1822 @@ local function guidegatherConfig ()
 							func = function ()
 								Nx.Opts:NXCmdDeleteMine()
 							end,
-						},						
-						CmdDelMisc = {
+						},
+						CmdDelTimber = {
 							order = 5,
+							type = "execute",
+							width = "full",
+							name = L["Delete Timber Gather Locations"],
+							func = function ()
+								Nx.Opts:NXCmdDeleteTimber()
+							end,						
+						},
+						CmdDelMisc = {
+							order = 6,
 							type = "execute",
 							width = "full",
 							name = L["Delete Misc Gather Locations"],
 							func = function ()
 								Nx.Opts:NXCmdDeleteMisc()
 							end,
-						},						
+						},
 						spacer2 = {
-							order = 2,
+							order = 7,
 							type = "description",
 							name = "\n",
-						},								
+						},
 						CmdImportHerb = {
-							order = 7,
+							order = 8,
 							type = "execute",
 							width = "full",
 							name = L["Import Herbs From GatherMate2_Data"],
 							func = function ()
 								Nx.Opts:NXCmdImportCarbHerb()
 							end,
-						},						
+						},
 						CmdImportMine = {
-							order = 8,
+							order = 9,
 							type = "execute",
 							width = "full",
 							name = L["Import Mines From GatherMate2_Data"],
 							func = function ()
 								Nx.Opts:NXCmdImportCarbMine()
 							end,
-						},						
+						},
 						CmdImportMisc = {
-							order = 9,
+							order = 10,
 							type = "execute",
 							width = "full",
 							name = L["Import Misc From GatherMate2_Data"],
 							func = function ()
 								Nx.Opts:NXCmdImportCarbMisc()
 							end,
-						},												
-					},					
+						},
+					},
 				},
 				HerbDisp = {
+					order = 3,
 					type = "group",
 					name = L["Herbalism"],
-					order = 3,
 					args = {
-						anclich = {						
+						enableall = {
 							order = 1,
+							type = "execute",
+							width = "double",
+							name = "Enable All",
+							func = function()
+								for i = 1,76 do
+									Nx.db.profile.Guide.ShowHerbs[i] = true
+								end
+							end,
+						},
+						disableall = {
+							order = 2,
+							type = "execute",
+							width = "double",
+							name = "Disable All",
+							func = function()
+								for i = 1,76 do
+									Nx.db.profile.Guide.ShowHerbs[i] = false
+								end
+							end,
+						},
+						anclich = {
+							order = 3,
 							type = "toggle",
 							width = "full",
 							name = L["Ancient Lichen"],
 							desc = L["Display"] .. " " .. L["Ancient Lichen"] .. " " .. L["Nodes On Map"],
 							get = function()
-								return Nx.db.profile.Guide.ShowHerbs[1] 
+								return Nx.db.profile.Guide.ShowHerbs[1]
 							end,
 							set = function()
-								Nx.db.profile.Guide.ShowHerbs[1] = not Nx.db.profile.Guide.ShowHerbs[1]								
-							end,							
+								Nx.db.profile.Guide.ShowHerbs[1] = not Nx.db.profile.Guide.ShowHerbs[1]
+							end,
 						},
-						arthastear = {						
-							order = 2,
+						arthastear = {
+							order = 4,
 							type = "toggle",
 							width = "full",
 							name = L["Arthas' Tears"],
 							desc = L["Display"] .. " " .. L["Arthas' Tears"] .. " " .. L["Nodes On Map"],
 							get = function()
-								return Nx.db.profile.Guide.ShowHerbs[2] 
+								return Nx.db.profile.Guide.ShowHerbs[2]
 							end,
 							set = function()
-								Nx.db.profile.Guide.ShowHerbs[2] = not Nx.db.profile.Guide.ShowHerbs[2]								
-							end,							
-						},						
-						blacklotus = {						
-							order = 3,
+								Nx.db.profile.Guide.ShowHerbs[2] = not Nx.db.profile.Guide.ShowHerbs[2]
+							end,
+						},
+						blacklotus = {
+							order = 5,
 							type = "toggle",
 							width = "full",
 							name = L["Black Lotus"],
 							desc = L["Display"] .. " " .. L["Black Lotus"] .. " " .. L["Nodes On Map"],
 							get = function()
-								return Nx.db.profile.Guide.ShowHerbs[3] 
+								return Nx.db.profile.Guide.ShowHerbs[3]
 							end,
 							set = function()
-								Nx.db.profile.Guide.ShowHerbs[3] = not Nx.db.profile.Guide.ShowHerbs[3]								
-							end,							
-						},		
-						blindweed = {						
-							order = 4,
+								Nx.db.profile.Guide.ShowHerbs[3] = not Nx.db.profile.Guide.ShowHerbs[3]
+							end,
+						},
+						blindweed = {
+							order = 6,
 							type = "toggle",
 							width = "full",
 							name = L["Blindweed"],
 							desc = L["Display"] .. " " .. L["Blindweed"] .. " " .. L["Nodes On Map"],
 							get = function()
-								return Nx.db.profile.Guide.ShowHerbs[4] 
+								return Nx.db.profile.Guide.ShowHerbs[4]
 							end,
 							set = function()
-								Nx.db.profile.Guide.ShowHerbs[4] = not Nx.db.profile.Guide.ShowHerbs[4]								
-							end,							
+								Nx.db.profile.Guide.ShowHerbs[4] = not Nx.db.profile.Guide.ShowHerbs[4]
+							end,
 						},
-						bloodthistle = {						
-							order = 5,
+						bloodthistle = {
+							order = 7,
 							type = "toggle",
 							width = "full",
 							name = L["Bloodthistle"],
 							desc = L["Display"] .. " " .. L["Bloodthistle"] .. " " .. L["Nodes On Map"],
 							get = function()
-								return Nx.db.profile.Guide.ShowHerbs[5] 
+								return Nx.db.profile.Guide.ShowHerbs[5]
 							end,
 							set = function()
-								Nx.db.profile.Guide.ShowHerbs[5] = not Nx.db.profile.Guide.ShowHerbs[5]								
-							end,							
+								Nx.db.profile.Guide.ShowHerbs[5] = not Nx.db.profile.Guide.ShowHerbs[5]
+							end,
 						},
-						briarthorn = {						
-							order = 6,
+						briarthorn = {
+							order = 8,
 							type = "toggle",
 							width = "full",
 							name = L["Briarthorn"],
 							desc = L["Display"] .. " " .. L["Briarthorn"] .. " " .. L["Nodes On Map"],
 							get = function()
-								return Nx.db.profile.Guide.ShowHerbs[6] 
+								return Nx.db.profile.Guide.ShowHerbs[6]
 							end,
 							set = function()
 								Nx.db.profile.Guide.ShowHerbs[6] = not Nx.db.profile.Guide.ShowHerbs[6]
-							end,							
-						},						
-						bruiseweed = {						
-							order = 7,
+							end,
+						},
+						bruiseweed = {
+							order = 9,
 							type = "toggle",
 							width = "full",
 							name = L["Bruiseweed"],
 							desc = L["Display"] .. " " .. L["Bruiseweed"] .. " " .. L["Nodes On Map"],
 							get = function()
-								return Nx.db.profile.Guide.ShowHerbs[7] 
+								return Nx.db.profile.Guide.ShowHerbs[7]
 							end,
 							set = function()
-								Nx.db.profile.Guide.ShowHerbs[7] = not Nx.db.profile.Guide.ShowHerbs[7]								
-							end,							
-						},						
-						dreamfoil = {						
-							order = 8,
+								Nx.db.profile.Guide.ShowHerbs[7] = not Nx.db.profile.Guide.ShowHerbs[7]
+							end,
+						},
+						dreamfoil = {
+							order = 10,
 							type = "toggle",
 							width = "full",
 							name = L["Dreamfoil"],
 							desc = L["Display"] .. " " .. L["Dreamfoil"] .. " " .. L["Nodes On Map"],
 							get = function()
-								return Nx.db.profile.Guide.ShowHerbs[8] 
+								return Nx.db.profile.Guide.ShowHerbs[8]
 							end,
 							set = function()
-								Nx.db.profile.Guide.ShowHerbs[8] = not Nx.db.profile.Guide.ShowHerbs[8]								
-							end,							
-						},						
-						dreamglory = {						
-							order = 9,
+								Nx.db.profile.Guide.ShowHerbs[8] = not Nx.db.profile.Guide.ShowHerbs[8]
+							end,
+						},
+						dreamglory = {
+							order = 11,
 							type = "toggle",
 							width = "full",
 							name = L["Dreaming Glory"],
 							desc = L["Display"] .. " " .. L["Dreaming Glory"] .. " " .. L["Nodes On Map"],
 							get = function()
-								return Nx.db.profile.Guide.ShowHerbs[9] 
+								return Nx.db.profile.Guide.ShowHerbs[9]
 							end,
 							set = function()
-								Nx.db.profile.Guide.ShowHerbs[9] = not Nx.db.profile.Guide.ShowHerbs[9]								
-							end,							
-						},						
-						earthroot = {						
-							order = 10,
+								Nx.db.profile.Guide.ShowHerbs[9] = not Nx.db.profile.Guide.ShowHerbs[9]
+							end,
+						},
+						earthroot = {
+							order = 12,
 							type = "toggle",
 							width = "full",
 							name = L["Earthroot"],
 							desc = L["Display"] .. " " .. L["Earthroot"] .. " " .. L["Nodes On Map"],
 							get = function()
-								return Nx.db.profile.Guide.ShowHerbs[10] 
+								return Nx.db.profile.Guide.ShowHerbs[10]
 							end,
 							set = function()
-								Nx.db.profile.Guide.ShowHerbs[10] = not Nx.db.profile.Guide.ShowHerbs[10]								
-							end,							
-						},						
-						fadeleaf = {						
-							order = 11,
+								Nx.db.profile.Guide.ShowHerbs[10] = not Nx.db.profile.Guide.ShowHerbs[10]
+							end,
+						},
+						fadeleaf = {
+							order = 13,
 							type = "toggle",
 							width = "full",
 							name = L["Fadeleaf"],
 							desc = L["Display"] .. " " .. L["Fadeleaf"] .. " " .. L["Nodes On Map"],
 							get = function()
-								return Nx.db.profile.Guide.ShowHerbs[11] 
+								return Nx.db.profile.Guide.ShowHerbs[11]
 							end,
 							set = function()
-								Nx.db.profile.Guide.ShowHerbs[11] = not Nx.db.profile.Guide.ShowHerbs[11]								
-							end,							
-						},						
-						felweed = {						
-							order = 12,
+								Nx.db.profile.Guide.ShowHerbs[11] = not Nx.db.profile.Guide.ShowHerbs[11]
+							end,
+						},
+						felweed = {
+							order = 14,
 							type = "toggle",
 							width = "full",
 							name = L["Felweed"],
 							desc = L["Display"] .. " " .. L["Felweed"] .. " " .. L["Nodes On Map"],
 							get = function()
-								return Nx.db.profile.Guide.ShowHerbs[12] 
+								return Nx.db.profile.Guide.ShowHerbs[12]
 							end,
 							set = function()
-								Nx.db.profile.Guide.ShowHerbs[12] = not Nx.db.profile.Guide.ShowHerbs[12]								
-							end,							
-						},						
-						firebloom = {						
-							order = 13,
+								Nx.db.profile.Guide.ShowHerbs[12] = not Nx.db.profile.Guide.ShowHerbs[12]
+							end,
+						},
+						firebloom = {
+							order = 15,
 							type = "toggle",
 							width = "full",
 							name = L["Firebloom"],
 							desc = L["Display"] .. " " .. L["Firebloom"] .. " " .. L["Nodes On Map"],
 							get = function()
-								return Nx.db.profile.Guide.ShowHerbs[13] 
+								return Nx.db.profile.Guide.ShowHerbs[13]
 							end,
 							set = function()
-								Nx.db.profile.Guide.ShowHerbs[13] = not Nx.db.profile.Guide.ShowHerbs[13]								
-							end,							
-						},						
-						flamecap = {						
-							order = 14,
+								Nx.db.profile.Guide.ShowHerbs[13] = not Nx.db.profile.Guide.ShowHerbs[13]
+							end,
+						},
+						flamecap = {
+							order = 16,
 							type = "toggle",
 							width = "full",
 							name = L["Flame Cap"],
 							desc = L["Display"] .. " " .. L["Flame Cap"] .. " " .. L["Nodes On Map"],
 							get = function()
-								return Nx.db.profile.Guide.ShowHerbs[14] 
+								return Nx.db.profile.Guide.ShowHerbs[14]
 							end,
 							set = function()
-								Nx.db.profile.Guide.ShowHerbs[14] = not Nx.db.profile.Guide.ShowHerbs[14]								
-							end,							
-						},						
-						ghostmush = {						
-							order = 15,
+								Nx.db.profile.Guide.ShowHerbs[14] = not Nx.db.profile.Guide.ShowHerbs[14]
+							end,
+						},
+						ghostmush = {
+							order = 17,
 							type = "toggle",
 							width = "full",
 							name = L["Ghost Mushroom"],
 							desc = L["Display"] .. " " .. L["Ghost Mushroom"] .. " " .. L["Nodes On Map"],
 							get = function()
-								return Nx.db.profile.Guide.ShowHerbs[15] 
+								return Nx.db.profile.Guide.ShowHerbs[15]
 							end,
 							set = function()
-								Nx.db.profile.Guide.ShowHerbs[15] = not Nx.db.profile.Guide.ShowHerbs[15]								
-							end,							
-						},						
-						goldsansam = {						
-							order = 16,
+								Nx.db.profile.Guide.ShowHerbs[15] = not Nx.db.profile.Guide.ShowHerbs[15]
+							end,
+						},
+						goldsansam = {
+							order = 18,
 							type = "toggle",
 							width = "full",
 							name = L["Golden Sansam"],
 							desc = L["Display"] .. " " .. L["Golden Sansam"] .. " " .. L["Nodes On Map"],
 							get = function()
-								return Nx.db.profile.Guide.ShowHerbs[16] 
+								return Nx.db.profile.Guide.ShowHerbs[16]
 							end,
 							set = function()
-								Nx.db.profile.Guide.ShowHerbs[16] = not Nx.db.profile.Guide.ShowHerbs[16]								
-							end,							
-						},						
-						goldthorn = {						
-							order = 17,
+								Nx.db.profile.Guide.ShowHerbs[16] = not Nx.db.profile.Guide.ShowHerbs[16]
+							end,
+						},
+						goldthorn = {
+							order = 19,
 							type = "toggle",
 							width = "full",
 							name = L["Goldthorn"],
 							desc = L["Display"] .. " " .. L["Goldthorn"] .. " " .. L["Nodes On Map"],
 							get = function()
-								return Nx.db.profile.Guide.ShowHerbs[17] 
+								return Nx.db.profile.Guide.ShowHerbs[17]
 							end,
 							set = function()
-								Nx.db.profile.Guide.ShowHerbs[17] = not Nx.db.profile.Guide.ShowHerbs[17]								
-							end,							
-						},						
-						gravemoss = {						
-							order = 18,
+								Nx.db.profile.Guide.ShowHerbs[17] = not Nx.db.profile.Guide.ShowHerbs[17]
+							end,
+						},
+						gravemoss = {
+							order = 20,
 							type = "toggle",
 							width = "full",
 							name = L["Grave Moss"],
 							desc = L["Display"] .. " " .. L["Grave Moss"] .. " " .. L["Nodes On Map"],
 							get = function()
-								return Nx.db.profile.Guide.ShowHerbs[18] 
+								return Nx.db.profile.Guide.ShowHerbs[18]
 							end,
 							set = function()
-								Nx.db.profile.Guide.ShowHerbs[18] = not Nx.db.profile.Guide.ShowHerbs[18]								
-							end,							
-						},						
-						gromsblood = {						
-							order = 19,
+								Nx.db.profile.Guide.ShowHerbs[18] = not Nx.db.profile.Guide.ShowHerbs[18]
+							end,
+						},
+						gromsblood = {
+							order = 21,
 							type = "toggle",
 							width = "full",
 							name = L["Gromsblood"],
 							desc = L["Display"] .. " " .. L["Gromsblood"] .. " " .. L["Nodes On Map"],
 							get = function()
-								return Nx.db.profile.Guide.ShowHerbs[19] 
+								return Nx.db.profile.Guide.ShowHerbs[19]
 							end,
 							set = function()
-								Nx.db.profile.Guide.ShowHerbs[19] = not Nx.db.profile.Guide.ShowHerbs[19]								
-							end,							
-						},						
-						icecap = {						
-							order = 20,
+								Nx.db.profile.Guide.ShowHerbs[19] = not Nx.db.profile.Guide.ShowHerbs[19]
+							end,
+						},
+						icecap = {
+							order = 22,
 							type = "toggle",
 							width = "full",
 							name = L["Icecap"],
 							desc = L["Display"] .. " " .. L["Icecap"] .. " " .. L["Nodes On Map"],
 							get = function()
-								return Nx.db.profile.Guide.ShowHerbs[20] 
+								return Nx.db.profile.Guide.ShowHerbs[20]
 							end,
 							set = function()
-								Nx.db.profile.Guide.ShowHerbs[20] = not Nx.db.profile.Guide.ShowHerbs[20]								
-							end,							
-						},						
-						khadgar = {						
-							order = 21,
+								Nx.db.profile.Guide.ShowHerbs[20] = not Nx.db.profile.Guide.ShowHerbs[20]
+							end,
+						},
+						khadgar = {
+							order = 23,
 							type = "toggle",
 							width = "full",
 							name = L["Khadgar's Whisker"],
 							desc = L["Display"] .. " " .. L["Khadgar's Whisker"] .. " " .. L["Nodes On Map"],
 							get = function()
-								return Nx.db.profile.Guide.ShowHerbs[21] 
+								return Nx.db.profile.Guide.ShowHerbs[21]
 							end,
 							set = function()
-								Nx.db.profile.Guide.ShowHerbs[21] = not Nx.db.profile.Guide.ShowHerbs[21]								
-							end,							
-						},						
-						kingsblood = {						
-							order = 22,
+								Nx.db.profile.Guide.ShowHerbs[21] = not Nx.db.profile.Guide.ShowHerbs[21]
+							end,
+						},
+						kingsblood = {
+							order = 24,
 							type = "toggle",
 							width = "full",
 							name = L["Kingsblood"],
 							desc = L["Display"] .. " " .. L["Kingsblood"] .. " " .. L["Nodes On Map"],
 							get = function()
-								return Nx.db.profile.Guide.ShowHerbs[22] 
+								return Nx.db.profile.Guide.ShowHerbs[22]
 							end,
 							set = function()
-								Nx.db.profile.Guide.ShowHerbs[22] = not Nx.db.profile.Guide.ShowHerbs[22]								
-							end,							
-						},												
-						liferoot = {						
-							order = 23,
+								Nx.db.profile.Guide.ShowHerbs[22] = not Nx.db.profile.Guide.ShowHerbs[22]
+							end,
+						},
+						liferoot = {
+							order = 25,
 							type = "toggle",
 							width = "full",
 							name = L["Liferoot"],
 							desc = L["Display"] .. " " .. L["Liferoot"] .. " " .. L["Nodes On Map"],
 							get = function()
-								return Nx.db.profile.Guide.ShowHerbs[23] 
+								return Nx.db.profile.Guide.ShowHerbs[23]
 							end,
 							set = function()
-								Nx.db.profile.Guide.ShowHerbs[23] = not Nx.db.profile.Guide.ShowHerbs[23]								
-							end,							
-						},												
-						mageroyal = {						
-							order = 24,
+								Nx.db.profile.Guide.ShowHerbs[23] = not Nx.db.profile.Guide.ShowHerbs[23]
+							end,
+						},
+						mageroyal = {
+							order = 26,
 							type = "toggle",
 							width = "full",
 							name = L["Mageroyal"],
 							desc = L["Display"] .. " " .. L["Mageroyal"] .. " " .. L["Nodes On Map"],
 							get = function()
-								return Nx.db.profile.Guide.ShowHerbs[24] 
+								return Nx.db.profile.Guide.ShowHerbs[24]
 							end,
 							set = function()
-								Nx.db.profile.Guide.ShowHerbs[24] = not Nx.db.profile.Guide.ShowHerbs[24]								
-							end,							
-						},												
-						manathistle = {						
-							order = 25,
+								Nx.db.profile.Guide.ShowHerbs[24] = not Nx.db.profile.Guide.ShowHerbs[24]
+							end,
+						},
+						manathistle = {
+							order = 27,
 							type = "toggle",
 							width = "full",
 							name = L["Mana Thistle"],
 							desc = L["Display"] .. " " .. L["Mana Thistle"] .. " " .. L["Nodes On Map"],
 							get = function()
-								return Nx.db.profile.Guide.ShowHerbs[25] 
+								return Nx.db.profile.Guide.ShowHerbs[25]
 							end,
 							set = function()
-								Nx.db.profile.Guide.ShowHerbs[25] = not Nx.db.profile.Guide.ShowHerbs[25]								
-							end,							
-						},												
-						mountainsilver = {						
-							order = 26,
+								Nx.db.profile.Guide.ShowHerbs[25] = not Nx.db.profile.Guide.ShowHerbs[25]
+							end,
+						},
+						mountainsilver = {
+							order = 28,
 							type = "toggle",
 							width = "full",
 							name = L["Mountain Silversage"],
 							desc = L["Display"] .. " " .. L["Mountain Silversage"] .. " " .. L["Nodes On Map"],
 							get = function()
-								return Nx.db.profile.Guide.ShowHerbs[26] 
+								return Nx.db.profile.Guide.ShowHerbs[26]
 							end,
 							set = function()
-								Nx.db.profile.Guide.ShowHerbs[26] = not Nx.db.profile.Guide.ShowHerbs[26]								
-							end,							
-						},												
-						netherbloom = {						
-							order = 27,
+								Nx.db.profile.Guide.ShowHerbs[26] = not Nx.db.profile.Guide.ShowHerbs[26]
+							end,
+						},
+						netherbloom = {
+							order = 29,
 							type = "toggle",
 							width = "full",
 							name = L["Netherbloom"],
 							desc = L["Display"] .. " " .. L["Netherbloom"] .. " " .. L["Nodes On Map"],
 							get = function()
-								return Nx.db.profile.Guide.ShowHerbs[27] 
+								return Nx.db.profile.Guide.ShowHerbs[27]
 							end,
 							set = function()
-								Nx.db.profile.Guide.ShowHerbs[27] = not Nx.db.profile.Guide.ShowHerbs[27]								
-							end,							
-						},												
-						netherdust = {						
-							order = 28,
+								Nx.db.profile.Guide.ShowHerbs[27] = not Nx.db.profile.Guide.ShowHerbs[27]
+							end,
+						},
+						netherdust = {
+							order = 30,
 							type = "toggle",
 							width = "full",
 							name = L["Netherdust Bush"],
 							desc = L["Display"] .. " " .. L["Netherdust Bush"] .. " " .. L["Nodes On Map"],
 							get = function()
-								return Nx.db.profile.Guide.ShowHerbs[28] 
+								return Nx.db.profile.Guide.ShowHerbs[28]
 							end,
 							set = function()
-								Nx.db.profile.Guide.ShowHerbs[28] = not Nx.db.profile.Guide.ShowHerbs[28]								
-							end,							
+								Nx.db.profile.Guide.ShowHerbs[28] = not Nx.db.profile.Guide.ShowHerbs[28]
+							end,
 						},
-						nightmare = {						
-							order = 29,
+						nightmare = {
+							order = 31,
 							type = "toggle",
 							width = "full",
 							name = L["Nightmare Vine"],
 							desc = L["Display"] .. " " .. L["Nightmare Vine"] .. " " .. L["Nodes On Map"],
 							get = function()
-								return Nx.db.profile.Guide.ShowHerbs[29] 
+								return Nx.db.profile.Guide.ShowHerbs[29]
 							end,
 							set = function()
-								Nx.db.profile.Guide.ShowHerbs[29] = not Nx.db.profile.Guide.ShowHerbs[29]								
-							end,							
-						},						
-						peacebloom = {						
-							order = 30,
+								Nx.db.profile.Guide.ShowHerbs[29] = not Nx.db.profile.Guide.ShowHerbs[29]
+							end,
+						},
+						peacebloom = {
+							order = 32,
 							type = "toggle",
 							width = "full",
 							name = L["Peacebloom"],
 							desc = L["Display"] .. " " .. L["Peacebloom"] .. " " .. L["Nodes On Map"],
 							get = function()
-								return Nx.db.profile.Guide.ShowHerbs[30] 
+								return Nx.db.profile.Guide.ShowHerbs[30]
 							end,
 							set = function()
-								Nx.db.profile.Guide.ShowHerbs[30] = not Nx.db.profile.Guide.ShowHerbs[30]								
-							end,							
-						},						
-						sorrowmoss = {						
-							order = 31,
+								Nx.db.profile.Guide.ShowHerbs[30] = not Nx.db.profile.Guide.ShowHerbs[30]
+							end,
+						},
+						sorrowmoss = {
+							order = 33,
 							type = "toggle",
 							width = "full",
 							name = L["Sorrowmoss"],
 							desc = L["Display"] .. " " .. L["Sorrowmoss"] .. " " .. L["Nodes On Map"],
 							get = function()
-								return Nx.db.profile.Guide.ShowHerbs[31] 
+								return Nx.db.profile.Guide.ShowHerbs[31]
 							end,
 							set = function()
-								Nx.db.profile.Guide.ShowHerbs[31] = not Nx.db.profile.Guide.ShowHerbs[31]								
-							end,							
-						},						
-						purplelotus = {						
-							order = 32,
+								Nx.db.profile.Guide.ShowHerbs[31] = not Nx.db.profile.Guide.ShowHerbs[31]
+							end,
+						},
+						purplelotus = {
+							order = 34,
 							type = "toggle",
 							width = "full",
 							name = L["Purple Lotus"],
 							desc = L["Display"] .. " " .. L["Purple Lotus"] .. " " .. L["Nodes On Map"],
 							get = function()
-								return Nx.db.profile.Guide.ShowHerbs[32] 
+								return Nx.db.profile.Guide.ShowHerbs[32]
 							end,
 							set = function()
-								Nx.db.profile.Guide.ShowHerbs[32] = not Nx.db.profile.Guide.ShowHerbs[32]								
-							end,							
-						},						
-						ragveil = {						
-							order = 33,
+								Nx.db.profile.Guide.ShowHerbs[32] = not Nx.db.profile.Guide.ShowHerbs[32]
+							end,
+						},
+						ragveil = {
+							order = 35,
 							type = "toggle",
 							width = "full",
 							name = L["Ragveil"],
 							desc = L["Display"] .. " " .. L["Ragveil"] .. " " .. L["Nodes On Map"],
 							get = function()
-								return Nx.db.profile.Guide.ShowHerbs[33] 
+								return Nx.db.profile.Guide.ShowHerbs[33]
 							end,
 							set = function()
-								Nx.db.profile.Guide.ShowHerbs[33] = not Nx.db.profile.Guide.ShowHerbs[33]								
-							end,							
-						},						
-						silverleaf = {						
-							order = 34,
+								Nx.db.profile.Guide.ShowHerbs[33] = not Nx.db.profile.Guide.ShowHerbs[33]
+							end,
+						},
+						silverleaf = {
+							order = 36,
 							type = "toggle",
 							width = "full",
 							name = L["Silverleaf"],
 							desc = L["Display"] .. " " .. L["Silverleaf"] .. " " .. L["Nodes On Map"],
 							get = function()
-								return Nx.db.profile.Guide.ShowHerbs[34] 
+								return Nx.db.profile.Guide.ShowHerbs[34]
 							end,
 							set = function()
-								Nx.db.profile.Guide.ShowHerbs[34] = not Nx.db.profile.Guide.ShowHerbs[34]								
-							end,							
-						},						
-						stranglekelp = {						
-							order = 35,
+								Nx.db.profile.Guide.ShowHerbs[34] = not Nx.db.profile.Guide.ShowHerbs[34]
+							end,
+						},
+						stranglekelp = {
+							order = 37,
 							type = "toggle",
 							width = "full",
 							name = L["Stranglekelp"],
 							desc = L["Display"] .. " " .. L["Stranglekelp"] .. " " .. L["Nodes On Map"],
 							get = function()
-								return Nx.db.profile.Guide.ShowHerbs[35] 
+								return Nx.db.profile.Guide.ShowHerbs[35]
 							end,
 							set = function()
-								Nx.db.profile.Guide.ShowHerbs[35] = not Nx.db.profile.Guide.ShowHerbs[35]								
-							end,							
-						},						
-						sungrass = {						
-							order = 36,
+								Nx.db.profile.Guide.ShowHerbs[35] = not Nx.db.profile.Guide.ShowHerbs[35]
+							end,
+						},
+						sungrass = {
+							order = 38,
 							type = "toggle",
 							width = "full",
 							name = L["Sungrass"],
 							desc = L["Display"] .. " " .. L["Sungrass"] .. " " .. L["Nodes On Map"],
 							get = function()
-								return Nx.db.profile.Guide.ShowHerbs[36] 
+								return Nx.db.profile.Guide.ShowHerbs[36]
 							end,
 							set = function()
-								Nx.db.profile.Guide.ShowHerbs[36] = not Nx.db.profile.Guide.ShowHerbs[36]								
-							end,							
-						},						
-						terocone = {						
-							order = 37,
+								Nx.db.profile.Guide.ShowHerbs[36] = not Nx.db.profile.Guide.ShowHerbs[36]
+							end,
+						},
+						terocone = {
+							order = 39,
 							type = "toggle",
 							width = "full",
-							name = L["Terrocone"],
-							desc = L["Display"] .. " " .. L["Terrocone"] .. " " .. L["Nodes On Map"],
+							name = L["Terocone"],
+							desc = L["Display"] .. " " .. L["Terocone"] .. " " .. L["Nodes On Map"],
 							get = function()
-								return Nx.db.profile.Guide.ShowHerbs[37] 
+								return Nx.db.profile.Guide.ShowHerbs[37]
 							end,
 							set = function()
-								Nx.db.profile.Guide.ShowHerbs[37] = not Nx.db.profile.Guide.ShowHerbs[37]								
-							end,							
-						},						
-						wildsteel = {						
-							order = 38,
+								Nx.db.profile.Guide.ShowHerbs[37] = not Nx.db.profile.Guide.ShowHerbs[37]
+							end,
+						},
+						wildsteel = {
+							order = 40,
 							type = "toggle",
 							width = "full",
 							name = L["Wild Steelbloom"],
 							desc = L["Display"] .. " " .. L["Wild Steelbloom"] .. " " .. L["Nodes On Map"],
 							get = function()
-								return Nx.db.profile.Guide.ShowHerbs[38] 
+								return Nx.db.profile.Guide.ShowHerbs[38]
 							end,
 							set = function()
-								Nx.db.profile.Guide.ShowHerbs[38] = not Nx.db.profile.Guide.ShowHerbs[38]								
-							end,							
-						},						
-						dragonsteeth = {						
-							order = 39,
+								Nx.db.profile.Guide.ShowHerbs[38] = not Nx.db.profile.Guide.ShowHerbs[38]
+							end,
+						},
+						dragonsteeth = {
+							order = 41,
 							type = "toggle",
 							width = "full",
 							name = L["Dragon's Teeth"],
 							desc = L["Display"] .. " " .. L["Dragon's Teeth"] .. " " .. L["Nodes On Map"],
 							get = function()
-								return Nx.db.profile.Guide.ShowHerbs[39] 
+								return Nx.db.profile.Guide.ShowHerbs[39]
 							end,
 							set = function()
-								Nx.db.profile.Guide.ShowHerbs[39] = not Nx.db.profile.Guide.ShowHerbs[39]								
-							end,							
+								Nx.db.profile.Guide.ShowHerbs[39] = not Nx.db.profile.Guide.ShowHerbs[39]
+							end,
 						},
-						glowcap = {						
-							order = 40,
+						glowcap = {
+							order = 42,
 							type = "toggle",
 							width = "full",
 							name = L["Glowcap"],
 							desc = L["Display"] .. " " .. L["Glowcap"] .. " " .. L["Nodes On Map"],
 							get = function()
-								return Nx.db.profile.Guide.ShowHerbs[40] 
+								return Nx.db.profile.Guide.ShowHerbs[40]
 							end,
 							set = function()
-								Nx.db.profile.Guide.ShowHerbs[40] = not Nx.db.profile.Guide.ShowHerbs[40]								
-							end,							
-						},												
-						goldclover = {						
-							order = 41,
+								Nx.db.profile.Guide.ShowHerbs[40] = not Nx.db.profile.Guide.ShowHerbs[40]
+							end,
+						},
+						goldclover = {
+							order = 43,
 							type = "toggle",
 							width = "full",
 							name = L["Goldclover"],
 							desc = L["Display"] .. " " .. L["Goldclover"] .. " " .. L["Nodes On Map"],
 							get = function()
-								return Nx.db.profile.Guide.ShowHerbs[41] 
+								return Nx.db.profile.Guide.ShowHerbs[41]
 							end,
 							set = function()
-								Nx.db.profile.Guide.ShowHerbs[41] = not Nx.db.profile.Guide.ShowHerbs[41]								
-							end,							
-						},												
-						talandrarose = {						
-							order = 42,
+								Nx.db.profile.Guide.ShowHerbs[41] = not Nx.db.profile.Guide.ShowHerbs[41]
+							end,
+						},
+						talandrarose = {
+							order = 44,
 							type = "toggle",
 							width = "full",
 							name = L["Talandra's Rose"],
 							desc = L["Display"] .. " " .. L["Talandra's Rose"] .. " " .. L["Nodes On Map"],
 							get = function()
-								return Nx.db.profile.Guide.ShowHerbs[42] 
+								return Nx.db.profile.Guide.ShowHerbs[42]
 							end,
 							set = function()
-								Nx.db.profile.Guide.ShowHerbs[42] = not Nx.db.profile.Guide.ShowHerbs[42]								
-							end,							
-						},												
-						adderstongue = {						
-							order = 43,
+								Nx.db.profile.Guide.ShowHerbs[42] = not Nx.db.profile.Guide.ShowHerbs[42]
+							end,
+						},
+						adderstongue = {
+							order = 45,
 							type = "toggle",
 							width = "full",
 							name = L["Adder's Tongue"],
 							desc = L["Display"] .. " " .. L["Adder's Tongue"] .. " " .. L["Nodes On Map"],
 							get = function()
-								return Nx.db.profile.Guide.ShowHerbs[43] 
+								return Nx.db.profile.Guide.ShowHerbs[43]
 							end,
 							set = function()
-								Nx.db.profile.Guide.ShowHerbs[43] = not Nx.db.profile.Guide.ShowHerbs[43]								
-							end,							
-						},												
-						frozenherb = {						
-							order = 44,
+								Nx.db.profile.Guide.ShowHerbs[43] = not Nx.db.profile.Guide.ShowHerbs[43]
+							end,
+						},
+						frozenherb = {
+							order = 46,
 							type = "toggle",
 							width = "full",
 							name = L["Frozen Herb"],
 							desc = L["Display"] .. " " .. L["Frozen Herb"] .. " " .. L["Nodes On Map"],
 							get = function()
-								return Nx.db.profile.Guide.ShowHerbs[44] 
+								return Nx.db.profile.Guide.ShowHerbs[44]
 							end,
 							set = function()
-								Nx.db.profile.Guide.ShowHerbs[44] = not Nx.db.profile.Guide.ShowHerbs[44]								
-							end,							
-						},												
-						tigerlily = {						
-							order = 45,
+								Nx.db.profile.Guide.ShowHerbs[44] = not Nx.db.profile.Guide.ShowHerbs[44]
+							end,
+						},
+						tigerlily = {
+							order = 47,
 							type = "toggle",
 							width = "full",
 							name = L["Tiger Lily"],
 							desc = L["Display"] .. " " .. L["Tiger Lily"] .. " " .. L["Nodes On Map"],
 							get = function()
-								return Nx.db.profile.Guide.ShowHerbs[45] 
+								return Nx.db.profile.Guide.ShowHerbs[45]
 							end,
 							set = function()
-								Nx.db.profile.Guide.ShowHerbs[45] = not Nx.db.profile.Guide.ShowHerbs[45]								
-							end,							
-						},												
-						lichbloom = {						
-							order = 46,
+								Nx.db.profile.Guide.ShowHerbs[45] = not Nx.db.profile.Guide.ShowHerbs[45]
+							end,
+						},
+						lichbloom = {
+							order = 48,
 							type = "toggle",
 							width = "full",
 							name = L["Lichbloom"],
 							desc = L["Display"] .. " " .. L["Lichbloom"] .. " " .. L["Nodes On Map"],
 							get = function()
-								return Nx.db.profile.Guide.ShowHerbs[46] 
+								return Nx.db.profile.Guide.ShowHerbs[46]
 							end,
 							set = function()
-								Nx.db.profile.Guide.ShowHerbs[46] = not Nx.db.profile.Guide.ShowHerbs[46]								
-							end,							
-						},												
-						icethorn = {						
-							order = 47,
+								Nx.db.profile.Guide.ShowHerbs[46] = not Nx.db.profile.Guide.ShowHerbs[46]
+							end,
+						},
+						icethorn = {
+							order = 49,
 							type = "toggle",
 							width = "full",
 							name = L["Icethorn"],
 							desc = L["Display"] .. " " .. L["Icethorn"] .. " " .. L["Nodes On Map"],
 							get = function()
-								return Nx.db.profile.Guide.ShowHerbs[47] 
+								return Nx.db.profile.Guide.ShowHerbs[47]
 							end,
 							set = function()
-								Nx.db.profile.Guide.ShowHerbs[47] = not Nx.db.profile.Guide.ShowHerbs[47]								
-							end,							
-						},												
-						frostlotus = {						
-							order = 48,
+								Nx.db.profile.Guide.ShowHerbs[47] = not Nx.db.profile.Guide.ShowHerbs[47]
+							end,
+						},
+						frostlotus = {
+							order = 50,
 							type = "toggle",
 							width = "full",
 							name = L["Frost Lotus"],
 							desc = L["Display"] .. " " .. L["Frost Lotus"] .. " " .. L["Nodes On Map"],
 							get = function()
-								return Nx.db.profile.Guide.ShowHerbs[48] 
+								return Nx.db.profile.Guide.ShowHerbs[48]
 							end,
 							set = function()
-								Nx.db.profile.Guide.ShowHerbs[48] = not Nx.db.profile.Guide.ShowHerbs[48]								
-							end,							
-						},												
-						firethorn = {						
-							order = 49,
+								Nx.db.profile.Guide.ShowHerbs[48] = not Nx.db.profile.Guide.ShowHerbs[48]
+							end,
+						},
+						firethorn = {
+							order = 51,
 							type = "toggle",
 							width = "full",
 							name = L["Firethorn"],
 							desc = L["Display"] .. " " .. L["Firethorn"] .. " " .. L["Nodes On Map"],
 							get = function()
-								return Nx.db.profile.Guide.ShowHerbs[49] 
+								return Nx.db.profile.Guide.ShowHerbs[49]
 							end,
 							set = function()
-								Nx.db.profile.Guide.ShowHerbs[49] = not Nx.db.profile.Guide.ShowHerbs[49]								
-							end,							
-						},												
-						azsharaveil = {						
-							order = 50,
+								Nx.db.profile.Guide.ShowHerbs[49] = not Nx.db.profile.Guide.ShowHerbs[49]
+							end,
+						},
+						azsharaveil = {
+							order = 52,
 							type = "toggle",
 							width = "full",
 							name = L["Azshara's Veil"],
 							desc = L["Display"] .. " " .. L["Azshara's Veil"] .. " " .. L["Nodes On Map"],
 							get = function()
-								return Nx.db.profile.Guide.ShowHerbs[50] 
+								return Nx.db.profile.Guide.ShowHerbs[50]
 							end,
 							set = function()
-								Nx.db.profile.Guide.ShowHerbs[50] = not Nx.db.profile.Guide.ShowHerbs[50]								
-							end,							
-						},												
-						cinderbloom = {						
-							order = 51,
+								Nx.db.profile.Guide.ShowHerbs[50] = not Nx.db.profile.Guide.ShowHerbs[50]
+							end,
+						},
+						cinderbloom = {
+							order = 53,
 							type = "toggle",
 							width = "full",
 							name = L["Cinderbloom"],
 							desc = L["Display"] .. " " .. L["Cinderbloom"] .. " " .. L["Nodes On Map"],
 							get = function()
-								return Nx.db.profile.Guide.ShowHerbs[51] 
+								return Nx.db.profile.Guide.ShowHerbs[51]
 							end,
 							set = function()
-								Nx.db.profile.Guide.ShowHerbs[51] = not Nx.db.profile.Guide.ShowHerbs[51]								
-							end,							
-						},												
-						stormvine = {						
-							order = 52,
+								Nx.db.profile.Guide.ShowHerbs[51] = not Nx.db.profile.Guide.ShowHerbs[51]
+							end,
+						},
+						stormvine = {
+							order = 54,
 							type = "toggle",
 							width = "full",
 							name = L["Stormvine"],
 							desc = L["Display"] .. " " .. L["Stormvine"] .. " " .. L["Nodes On Map"],
 							get = function()
-								return Nx.db.profile.Guide.ShowHerbs[52] 
+								return Nx.db.profile.Guide.ShowHerbs[52]
 							end,
 							set = function()
-								Nx.db.profile.Guide.ShowHerbs[52] = not Nx.db.profile.Guide.ShowHerbs[52]								
-							end,							
-						},												
-						heartblossom = {						
-							order = 53,
+								Nx.db.profile.Guide.ShowHerbs[52] = not Nx.db.profile.Guide.ShowHerbs[52]
+							end,
+						},
+						heartblossom = {
+							order = 55,
 							type = "toggle",
 							width = "full",
 							name = L["Heartblossom"],
 							desc = L["Display"] .. " " .. L["Heartblossom"] .. " " .. L["Nodes On Map"],
 							get = function()
-								return Nx.db.profile.Guide.ShowHerbs[53] 
+								return Nx.db.profile.Guide.ShowHerbs[53]
 							end,
 							set = function()
-								Nx.db.profile.Guide.ShowHerbs[53] = not Nx.db.profile.Guide.ShowHerbs[53]								
-							end,							
-						},												
-						whiptail = {						
-							order = 54,
+								Nx.db.profile.Guide.ShowHerbs[53] = not Nx.db.profile.Guide.ShowHerbs[53]
+							end,
+						},
+						whiptail = {
+							order = 56,
 							type = "toggle",
 							width = "full",
 							name = L["Whiptail"],
 							desc = L["Display"] .. " " .. L["Whiptail"] .. " " .. L["Nodes On Map"],
 							get = function()
-								return Nx.db.profile.Guide.ShowHerbs[54] 
+								return Nx.db.profile.Guide.ShowHerbs[54]
 							end,
 							set = function()
-								Nx.db.profile.Guide.ShowHerbs[54] = not Nx.db.profile.Guide.ShowHerbs[54]								
-							end,							
-						},												
-						twilightjas = {						
-							order = 55,
+								Nx.db.profile.Guide.ShowHerbs[54] = not Nx.db.profile.Guide.ShowHerbs[54]
+							end,
+						},
+						twilightjas = {
+							order = 57,
 							type = "toggle",
 							width = "full",
 							name = L["Twilight Jasmine"],
 							desc = L["Display"] .. " " .. L["Twilight Jasmine"] .. " " .. L["Nodes On Map"],
 							get = function()
-								return Nx.db.profile.Guide.ShowHerbs[55] 
+								return Nx.db.profile.Guide.ShowHerbs[55]
 							end,
 							set = function()
-								Nx.db.profile.Guide.ShowHerbs[55] = not Nx.db.profile.Guide.ShowHerbs[55]								
-							end,							
-						},												
-						foolscap = {						
-							order = 56,
+								Nx.db.profile.Guide.ShowHerbs[55] = not Nx.db.profile.Guide.ShowHerbs[55]
+							end,
+						},
+						foolscap = {
+							order = 58,
 							type = "toggle",
 							width = "full",
 							name = L["Fool's Cap"],
 							desc = L["Display"] .. " " .. L["Fool's Cap"] .. " " .. L["Nodes On Map"],
 							get = function()
-								return Nx.db.profile.Guide.ShowHerbs[56] 
+								return Nx.db.profile.Guide.ShowHerbs[56]
 							end,
 							set = function()
-								Nx.db.profile.Guide.ShowHerbs[56] = not Nx.db.profile.Guide.ShowHerbs[56]								
-							end,							
-						},												
-						goldenlotus = {						
-							order = 57,
+								Nx.db.profile.Guide.ShowHerbs[56] = not Nx.db.profile.Guide.ShowHerbs[56]
+							end,
+						},
+						goldenlotus = {
+							order = 59,
 							type = "toggle",
 							width = "full",
 							name = L["Golden Lotus"],
 							desc = L["Display"] .. " " .. L["Golden Lotus"] .. " " .. L["Nodes On Map"],
 							get = function()
-								return Nx.db.profile.Guide.ShowHerbs[57] 
+								return Nx.db.profile.Guide.ShowHerbs[57]
 							end,
 							set = function()
-								Nx.db.profile.Guide.ShowHerbs[57] = not Nx.db.profile.Guide.ShowHerbs[57]								
-							end,							
-						},												
-						greentea = {						
-							order = 58,
+								Nx.db.profile.Guide.ShowHerbs[57] = not Nx.db.profile.Guide.ShowHerbs[57]
+							end,
+						},
+						greentea = {
+							order = 60,
 							type = "toggle",
 							width = "full",
 							name = L["Green Tea Leaf"],
 							desc = L["Display"] .. " " .. L["Green Tea Leaf"] .. " " .. L["Nodes On Map"],
 							get = function()
-								return Nx.db.profile.Guide.ShowHerbs[58] 
+								return Nx.db.profile.Guide.ShowHerbs[58]
 							end,
 							set = function()
-								Nx.db.profile.Guide.ShowHerbs[58] = not Nx.db.profile.Guide.ShowHerbs[58]								
-							end,							
-						},												
-						rainpoppy = {						
-							order = 59,
+								Nx.db.profile.Guide.ShowHerbs[58] = not Nx.db.profile.Guide.ShowHerbs[58]
+							end,
+						},
+						rainpoppy = {
+							order = 61,
 							type = "toggle",
 							width = "full",
 							name = L["Rain Poppy"],
 							desc = L["Display"] .. " " .. L["Rain Poppy"] .. " " .. L["Nodes On Map"],
 							get = function()
-								return Nx.db.profile.Guide.ShowHerbs[59] 
+								return Nx.db.profile.Guide.ShowHerbs[59]
 							end,
 							set = function()
-								Nx.db.profile.Guide.ShowHerbs[59] = not Nx.db.profile.Guide.ShowHerbs[59]								
-							end,							
-						},												
-						shatouched = {						
-							order = 60,
+								Nx.db.profile.Guide.ShowHerbs[59] = not Nx.db.profile.Guide.ShowHerbs[59]
+							end,
+						},
+						shatouched = {
+							order = 62,
 							type = "toggle",
 							width = "full",
 							name = L["Sha-Touched Herb"],
 							desc = L["Display"] .. " " .. L["Sha-Touched Herb"] .. " " .. L["Nodes On Map"],
 							get = function()
-								return Nx.db.profile.Guide.ShowHerbs[60] 
+								return Nx.db.profile.Guide.ShowHerbs[60]
 							end,
 							set = function()
-								Nx.db.profile.Guide.ShowHerbs[60] = not Nx.db.profile.Guide.ShowHerbs[60]								
-							end,							
-						},												
-						silkweed = {						
-							order = 61,
+								Nx.db.profile.Guide.ShowHerbs[60] = not Nx.db.profile.Guide.ShowHerbs[60]
+							end,
+						},
+						silkweed = {
+							order = 63,
 							type = "toggle",
 							width = "full",
 							name = L["Silkweed"],
 							desc = L["Display"] .. " " .. L["Silkweed"] .. " " .. L["Nodes On Map"],
 							get = function()
-								return Nx.db.profile.Guide.ShowHerbs[61] 
+								return Nx.db.profile.Guide.ShowHerbs[61]
 							end,
 							set = function()
-								Nx.db.profile.Guide.ShowHerbs[61] = not Nx.db.profile.Guide.ShowHerbs[61]								
-							end,							
-						},												
-						snowlily = {						
-							order = 62,
+								Nx.db.profile.Guide.ShowHerbs[61] = not Nx.db.profile.Guide.ShowHerbs[61]
+							end,
+						},
+						snowlily = {
+							order = 64,
 							type = "toggle",
 							width = "full",
 							name = L["Snow Lily"],
 							desc = L["Display"] .. " " .. L["Snow Lily"] .. " " .. L["Nodes On Map"],
 							get = function()
-								return Nx.db.profile.Guide.ShowHerbs[62] 
+								return Nx.db.profile.Guide.ShowHerbs[62]
 							end,
 							set = function()
-								Nx.db.profile.Guide.ShowHerbs[62] = not Nx.db.profile.Guide.ShowHerbs[62]								
-							end,							
-						},												
-					},					
+								Nx.db.profile.Guide.ShowHerbs[62] = not Nx.db.profile.Guide.ShowHerbs[62]
+							end,
+						},
+						chamlotus = {
+							order = 65,
+							type = "toggle",
+							width = "full",
+							name = L["Chameleon Lotus"],
+							desc = L["Display"] .. " " .. L["Chameleon Lotus"] .. " " .. L["Nodes On Map"],
+							get = function()
+								return Nx.db.profile.Guide.ShowHerbs[63]
+							end,
+							set = function()
+								Nx.db.profile.Guide.ShowHerbs[63] = not Nx.db.profile.Guide.ShowHerbs[63]
+							end,
+						},
+						frostweed = {
+							order = 66,
+							type = "toggle",
+							width = "full",
+							name = L["Frostweed"],
+							desc = L["Display"] .. " " .. L["Frostweed"] .. " " .. L["Nodes On Map"],
+							get = function()
+								return Nx.db.profile.Guide.ShowHerbs[64]
+							end,
+							set = function()
+								Nx.db.profile.Guide.ShowHerbs[64] = not Nx.db.profile.Guide.ShowHerbs[64]
+							end,
+						},
+						gorgrondflytrap = {
+							order = 67,
+							type = "toggle",
+							width = "full",
+							name = L["Gorgrond Flytrap"],
+							desc = L["Display"] .. " " .. L["Gorgrond Flytrap"] .. " " .. L["Nodes On Map"],
+							get = function()
+								return Nx.db.profile.Guide.ShowHerbs[65]
+							end,
+							set = function()
+								Nx.db.profile.Guide.ShowHerbs[65] = not Nx.db.profile.Guide.ShowHerbs[65]
+							end,
+						},
+						starflower = {
+							order = 68,
+							type = "toggle",
+							width = "full",
+							name = L["Starflower"],
+							desc = L["Display"] .. " " .. L["Starflower"] .. " " .. L["Nodes On Map"],
+							get = function()
+								return Nx.db.profile.Guide.ShowHerbs[66]
+							end,
+							set = function()
+								Nx.db.profile.Guide.ShowHerbs[66] = not Nx.db.profile.Guide.ShowHerbs[66]
+							end,
+						},
+						nagrandarrow = {
+							order = 69,
+							type = "toggle",
+							width = "full",
+							name = L["Nagrand Arrowbloom"],
+							desc = L["Display"] .. " " .. L["Nagrand Arrowbloom"] .. " " .. L["Nodes On Map"],
+							get = function()
+								return Nx.db.profile.Guide.ShowHerbs[67]
+							end,
+							set = function()
+								Nx.db.profile.Guide.ShowHerbs[67] = not Nx.db.profile.Guide.ShowHerbs[67]
+							end,
+						},
+						taladororch = {
+							order = 70,
+							type = "toggle",
+							width = "full",
+							name = L["Talador Orchid"],
+							desc = L["Display"] .. " " .. L["Talador Orchid"] .. " " .. L["Nodes On Map"],
+							get = function()
+								return Nx.db.profile.Guide.ShowHerbs[68]
+							end,
+							set = function()
+								Nx.db.profile.Guide.ShowHerbs[68] = not Nx.db.profile.Guide.ShowHerbs[68]
+							end,
+						},
+						fireweed = {
+							order = 71,
+							type = "toggle",
+							width = "full",
+							name = L["Fireweed"],
+							desc = L["Display"] .. " " .. L["Fireweed"] .. " " .. L["Nodes On Map"],
+							get = function()
+								return Nx.db.profile.Guide.ShowHerbs[69]
+							end,
+							set = function()
+								Nx.db.profile.Guide.ShowHerbs[69] = not Nx.db.profile.Guide.ShowHerbs[69]
+							end,
+						},
+						withered = {
+							order = 72,
+							type = "toggle",
+							width = "full",
+							name = L["Withered Herb"],
+							desc = L["Display"] .. " " .. L["Withered Herb"] .. " " .. L["Nodes On Map"],
+							get = function()
+								return Nx.db.profile.Guide.ShowHerbs[70]
+							end,
+							set = function()
+								Nx.db.profile.Guide.ShowHerbs[70] = not Nx.db.profile.Guide.ShowHerbs[70]
+							end,
+						},
+						aethril = {
+							order = 73,
+							type = "toggle",
+							width = "full",
+							name = L["Aethril"], -- 476
+							desc = L["Display"] .. " " .. L["Aethril"] .. " " .. L["Nodes On Map"],
+							get = function()
+								return Nx.db.profile.Guide.ShowHerbs[71]
+							end,
+							set = function()
+								Nx.db.profile.Guide.ShowHerbs[71] = not Nx.db.profile.Guide.ShowHerbs[71]
+							end,
+						},
+						dreamleaf = {
+							order = 74,
+							type = "toggle",
+							width = "full",
+							name = L["Dreamleaf"], -- 477
+							desc = L["Display"] .. " " .. L["Dreamleaf"] .. " " .. L["Nodes On Map"],
+							get = function()
+								return Nx.db.profile.Guide.ShowHerbs[72]
+							end,
+							set = function()
+								Nx.db.profile.Guide.ShowHerbs[72] = not Nx.db.profile.Guide.ShowHerbs[72]
+							end,
+						},
+						felwort = {
+							order = 75,
+							type = "toggle",
+							width = "full",
+							name = L["Felwort"], -- 478
+							desc = L["Display"] .. " " .. L["Felwort"] .. " " .. L["Nodes On Map"],
+							get = function()
+								return Nx.db.profile.Guide.ShowHerbs[73]
+							end,
+							set = function()
+								Nx.db.profile.Guide.ShowHerbs[73] = not Nx.db.profile.Guide.ShowHerbs[73]
+							end,
+						},
+						fjarnskaggl = {
+							order = 76,
+							type = "toggle",
+							width = "full",
+							name = L["Fjarnskaggl"], -- 479
+							desc = L["Display"] .. " " .. L["Fjarnskaggl"] .. " " .. L["Nodes On Map"],
+							get = function()
+								return Nx.db.profile.Guide.ShowHerbs[74]
+							end,
+							set = function()
+								Nx.db.profile.Guide.ShowHerbs[74] = not Nx.db.profile.Guide.ShowHerbs[74]
+							end,
+						},
+						foxflower = {
+							order = 77,
+							type = "toggle",
+							width = "full",
+							name = L["Foxflower"], -- 480
+							desc = L["Display"] .. " " .. L["Foxflower"] .. " " .. L["Nodes On Map"],
+							get = function()
+								return Nx.db.profile.Guide.ShowHerbs[75]
+							end,
+							set = function()
+								Nx.db.profile.Guide.ShowHerbs[75] = not Nx.db.profile.Guide.ShowHerbs[75]
+							end,
+						},
+						starlightrose = {
+							order = 78,
+							type = "toggle",
+							width = "full",
+							name = L["Starlight Rose"], -- 481
+							desc = L["Display"] .. " " .. L["Starlight Rose"] .. " " .. L["Nodes On Map"],
+							get = function()
+								return Nx.db.profile.Guide.ShowHerbs[76]
+							end,
+							set = function()
+								Nx.db.profile.Guide.ShowHerbs[76] = not Nx.db.profile.Guide.ShowHerbs[76]
+							end,
+						},						
+					},
 				},
 				MinesDisp = {
+					order = 4,
 					type = "group",
 					name = L["Mining"],
-					order = 3,
 					args = {
-						adamantite = {						
+						menableall = {
 							order = 1,
+							type = "execute",
+							width = "double",
+							name = "Enable All",
+							func = function()
+								for i = 1,50 do
+									Nx.db.profile.Guide.ShowMines[i] = true
+								end
+							end,
+						},
+						mdisableall = {
+							order = 2,
+							type = "execute",
+							width = "double",
+							name = "Disable All",
+							func = function()
+								for i = 1,50 do
+									Nx.db.profile.Guide.ShowMines[i] = false
+								end
+							end,
+						},					
+						adamantite = {
+							order = 3,
 							type = "toggle",
 							width = "full",
 							name = L["Adamantite Deposit"],
 							desc = L["Display"] .. " " .. L["Adamantite Deposit"] .. " " .. L["Nodes On Map"],
 							get = function()
-								return Nx.db.profile.Guide.ShowMines[1] 
+								return Nx.db.profile.Guide.ShowMines[1]
 							end,
 							set = function()
-								Nx.db.profile.Guide.ShowMines[1] = not Nx.db.profile.Guide.ShowMines[1]								
-							end,							
+								Nx.db.profile.Guide.ShowMines[1] = not Nx.db.profile.Guide.ShowMines[1]
+							end,
 						},
-						richadamantite = {						
-							order = 2,
+						richadamantite = {
+							order = 4,
 							type = "toggle",
 							width = "full",
 							name = L["Rich Adamantite Deposit"],
 							desc = L["Display"] .. " " .. L["Rich Adamantite Deposit"] .. " " .. L["Nodes On Map"],
 							get = function()
-								return Nx.db.profile.Guide.ShowMines[15] 
+								return Nx.db.profile.Guide.ShowMines[15]
 							end,
 							set = function()
-								Nx.db.profile.Guide.ShowMines[15] = not Nx.db.profile.Guide.ShowMines[15]								
-							end,							
-						},						
-						gemvein = {						
-							order = 3,
+								Nx.db.profile.Guide.ShowMines[15] = not Nx.db.profile.Guide.ShowMines[15]
+							end,
+						},
+						gemvein = {
+							order = 5,
 							type = "toggle",
 							width = "full",
 							name = L["Ancient Gem Vein"],
 							desc = L["Display"] .. " " .. L["Ancient Gem Vein"] .. " " .. L["Nodes On Map"],
 							get = function()
-								return Nx.db.profile.Guide.ShowMines[2] 
+								return Nx.db.profile.Guide.ShowMines[2]
 							end,
 							set = function()
-								Nx.db.profile.Guide.ShowMines[2] = not Nx.db.profile.Guide.ShowMines[2]								
-							end,							
-						},		
-						copper = {						
-							order = 4,
+								Nx.db.profile.Guide.ShowMines[2] = not Nx.db.profile.Guide.ShowMines[2]
+							end,
+						},
+						copper = {
+							order = 6,
 							type = "toggle",
 							width = "full",
 							name = L["Copper Vein"],
 							desc = L["Display"] .. " " .. L["Copper Vein"] .. " " .. L["Nodes On Map"],
 							get = function()
-								return Nx.db.profile.Guide.ShowMines[3] 
+								return Nx.db.profile.Guide.ShowMines[3]
 							end,
 							set = function()
-								Nx.db.profile.Guide.ShowMines[3] = not Nx.db.profile.Guide.ShowMines[3]								
-							end,							
+								Nx.db.profile.Guide.ShowMines[3] = not Nx.db.profile.Guide.ShowMines[3]
+							end,
 						},
-						darkiron = {						
-							order = 5,
+						darkiron = {
+							order = 7,
 							type = "toggle",
 							width = "full",
 							name = L["Dark Iron Deposit"],
 							desc = L["Display"] .. " " .. L["Dark Iron Deposit"] .. " " .. L["Nodes On Map"],
 							get = function()
-								return Nx.db.profile.Guide.ShowMines[4] 
+								return Nx.db.profile.Guide.ShowMines[4]
 							end,
 							set = function()
-								Nx.db.profile.Guide.ShowMines[4] = not Nx.db.profile.Guide.ShowMines[4]								
-							end,							
+								Nx.db.profile.Guide.ShowMines[4] = not Nx.db.profile.Guide.ShowMines[4]
+							end,
 						},
-						feliron = {						
-							order = 6,
+						feliron = {
+							order = 8,
 							type = "toggle",
 							width = "full",
 							name = L["Fel Iron Deposit"],
 							desc = L["Display"] .. " " .. L["Fel Iron Deposit"] .. " " .. L["Nodes On Map"],
 							get = function()
-								return Nx.db.profile.Guide.ShowMines[5] 
+								return Nx.db.profile.Guide.ShowMines[5]
 							end,
 							set = function()
 								Nx.db.profile.Guide.ShowMines[5] = not Nx.db.profile.Guide.ShowMines[5]
-							end,							
-						},						
-						gold = {						
-							order = 7,
+							end,
+						},
+						gold = {
+							order = 9,
 							type = "toggle",
 							width = "full",
 							name = L["Gold Vein"],
 							desc = L["Display"] .. " " .. L["Gold Vein"] .. " " .. L["Nodes On Map"],
 							get = function()
-								return Nx.db.profile.Guide.ShowMines[6] 
+								return Nx.db.profile.Guide.ShowMines[6]
 							end,
 							set = function()
-								Nx.db.profile.Guide.ShowMines[6] = not Nx.db.profile.Guide.ShowMines[6]								
-							end,							
-						},						
-						incendicite = {						
-							order = 8,
+								Nx.db.profile.Guide.ShowMines[6] = not Nx.db.profile.Guide.ShowMines[6]
+							end,
+						},
+						incendicite = {
+							order = 10,
 							type = "toggle",
 							width = "full",
 							name = L["Incendicite Mineral Vein"],
 							desc = L["Display"] .. " " .. L["Incendicite Mineral Vein"] .. " " .. L["Nodes On Map"],
 							get = function()
-								return Nx.db.profile.Guide.ShowMines[7] 
+								return Nx.db.profile.Guide.ShowMines[7]
 							end,
 							set = function()
-								Nx.db.profile.Guide.ShowMines[7] = not Nx.db.profile.Guide.ShowMines[7]								
-							end,							
-						},						
-						indurium = {						
-							order = 9,
+								Nx.db.profile.Guide.ShowMines[7] = not Nx.db.profile.Guide.ShowMines[7]
+							end,
+						},
+						indurium = {
+							order = 11,
 							type = "toggle",
 							width = "full",
 							name = L["Indurium Mineral Vein"],
 							desc = L["Display"] .. " " .. L["Indurium Mineral Vein"] .. " " .. L["Nodes On Map"],
 							get = function()
-								return Nx.db.profile.Guide.ShowMines[8] 
+								return Nx.db.profile.Guide.ShowMines[8]
 							end,
 							set = function()
-								Nx.db.profile.Guide.ShowMines[8] = not Nx.db.profile.Guide.ShowMines[8]								
-							end,							
-						},						
-						iron = {						
-							order = 10,
+								Nx.db.profile.Guide.ShowMines[8] = not Nx.db.profile.Guide.ShowMines[8]
+							end,
+						},
+						iron = {
+							order = 12,
 							type = "toggle",
 							width = "full",
 							name = L["Iron Deposit"],
 							desc = L["Display"] .. " " .. L["Iron Deposit"] .. " " .. L["Nodes On Map"],
 							get = function()
-								return Nx.db.profile.Guide.ShowMines[9] 
+								return Nx.db.profile.Guide.ShowMines[9]
 							end,
 							set = function()
-								Nx.db.profile.Guide.ShowMines[9] = not Nx.db.profile.Guide.ShowMines[9]								
-							end,							
-						},						
-						korium = {						
-							order = 11,
+								Nx.db.profile.Guide.ShowMines[9] = not Nx.db.profile.Guide.ShowMines[9]
+							end,
+						},
+						korium = {
+							order = 13,
 							type = "toggle",
 							width = "full",
 							name = L["Khorium Vein"],
 							desc = L["Display"] .. " " .. L["Khorium Vein"] .. " " .. L["Nodes On Map"],
 							get = function()
-								return Nx.db.profile.Guide.ShowMines[10] 
+								return Nx.db.profile.Guide.ShowMines[10]
 							end,
 							set = function()
-								Nx.db.profile.Guide.ShowMines[10] = not Nx.db.profile.Guide.ShowMines[10]								
-							end,							
-						},						
-						smallobsi = {						
-							order = 12,
+								Nx.db.profile.Guide.ShowMines[10] = not Nx.db.profile.Guide.ShowMines[10]
+							end,
+						},
+						smallobsi = {
+							order = 14,
 							type = "toggle",
 							width = "full",
 							name = L["Small Obsidian Chunk"],
 							desc = L["Display"] .. " " .. L["Small Obsidian Chunk"] .. " " .. L["Nodes On Map"],
 							get = function()
-								return Nx.db.profile.Guide.ShowMines[18] 
+								return Nx.db.profile.Guide.ShowMines[18]
 							end,
 							set = function()
-								Nx.db.profile.Guide.ShowMines[18] = not Nx.db.profile.Guide.ShowMines[18]								
-							end,							
-						},						
-						largeobs = {						
-							order = 13,
+								Nx.db.profile.Guide.ShowMines[18] = not Nx.db.profile.Guide.ShowMines[18]
+							end,
+						},
+						largeobs = {
+							order = 15,
 							type = "toggle",
 							width = "full",
 							name = L["Large Obsidian Chunk"],
 							desc = L["Display"] .. " " .. L["Large Obsidian Chunk"] .. " " .. L["Nodes On Map"],
 							get = function()
-								return Nx.db.profile.Guide.ShowMines[11] 
+								return Nx.db.profile.Guide.ShowMines[11]
 							end,
 							set = function()
-								Nx.db.profile.Guide.ShowMines[11] = not Nx.db.profile.Guide.ShowMines[11]								
-							end,							
-						},						
-						bloodstone = {						
-							order = 14,
+								Nx.db.profile.Guide.ShowMines[11] = not Nx.db.profile.Guide.ShowMines[11]
+							end,
+						},
+						bloodstone = {
+							order = 16,
 							type = "toggle",
 							width = "full",
 							name = L["Lesser Bloodstone Deposit"],
 							desc = L["Display"] .. " " .. L["Lesser Bloodstone Deposit"] .. " " .. L["Nodes On Map"],
 							get = function()
-								return Nx.db.profile.Guide.ShowMines[12] 
+								return Nx.db.profile.Guide.ShowMines[12]
 							end,
 							set = function()
-								Nx.db.profile.Guide.ShowMines[12] = not Nx.db.profile.Guide.ShowMines[12]								
-							end,							
-						},						
-						mithril = {						
-							order = 15,
+								Nx.db.profile.Guide.ShowMines[12] = not Nx.db.profile.Guide.ShowMines[12]
+							end,
+						},
+						mithril = {
+							order = 17,
 							type = "toggle",
 							width = "full",
 							name = L["Mithril Deposit"],
 							desc = L["Display"] .. " " .. L["Mithril Deposit"] .. " " .. L["Nodes On Map"],
 							get = function()
-								return Nx.db.profile.Guide.ShowMines[13] 
+								return Nx.db.profile.Guide.ShowMines[13]
 							end,
 							set = function()
-								Nx.db.profile.Guide.ShowMines[13] = not Nx.db.profile.Guide.ShowMines[13]								
-							end,							
-						},						
-						nethercite = {						
-							order = 16,
+								Nx.db.profile.Guide.ShowMines[13] = not Nx.db.profile.Guide.ShowMines[13]
+							end,
+						},
+						nethercite = {
+							order = 18,
 							type = "toggle",
 							width = "full",
 							name = L["Nethercite Deposit"],
 							desc = L["Display"] .. " " .. L["Nethercite Deposit"] .. " " .. L["Nodes On Map"],
 							get = function()
-								return Nx.db.profile.Guide.ShowMines[14] 
+								return Nx.db.profile.Guide.ShowMines[14]
 							end,
 							set = function()
-								Nx.db.profile.Guide.ShowMines[14] = not Nx.db.profile.Guide.ShowMines[14]								
-							end,							
-						},						
-						smallthor = {						
-							order = 17,
+								Nx.db.profile.Guide.ShowMines[14] = not Nx.db.profile.Guide.ShowMines[14]
+							end,
+						},
+						smallthor = {
+							order = 19,
 							type = "toggle",
 							width = "full",
 							name = L["Small Thorium Vein"],
 							desc = L["Display"] .. " " .. L["Small Thorium Vein"] .. " " .. L["Nodes On Map"],
 							get = function()
-								return Nx.db.profile.Guide.ShowMines[19] 
+								return Nx.db.profile.Guide.ShowMines[19]
 							end,
 							set = function()
-								Nx.db.profile.Guide.ShowMines[19] = not Nx.db.profile.Guide.ShowMines[19]								
-							end,							
-						},						
-						richthor = {						
-							order = 18,
+								Nx.db.profile.Guide.ShowMines[19] = not Nx.db.profile.Guide.ShowMines[19]
+							end,
+						},
+						richthor = {
+							order = 20,
 							type = "toggle",
 							width = "full",
 							name = L["Rich Thorium Vein"],
 							desc = L["Display"] .. " " .. L["Rich Thorium Vein"] .. " " .. L["Nodes On Map"],
 							get = function()
-								return Nx.db.profile.Guide.ShowMines[16] 
+								return Nx.db.profile.Guide.ShowMines[16]
 							end,
 							set = function()
-								Nx.db.profile.Guide.ShowMines[16] = not Nx.db.profile.Guide.ShowMines[16]								
-							end,							
-						},						
-						silver = {						
-							order = 19,
+								Nx.db.profile.Guide.ShowMines[16] = not Nx.db.profile.Guide.ShowMines[16]
+							end,
+						},
+						silver = {
+							order = 21,
 							type = "toggle",
 							width = "full",
 							name = L["Silver Vein"],
 							desc = L["Display"] .. " " .. L["Silver Vein"] .. " " .. L["Nodes On Map"],
 							get = function()
-								return Nx.db.profile.Guide.ShowMines[17] 
+								return Nx.db.profile.Guide.ShowMines[17]
 							end,
 							set = function()
-								Nx.db.profile.Guide.ShowMines[17] = not Nx.db.profile.Guide.ShowMines[17]								
-							end,							
-						},						
-						tin = {						
-							order = 20,
+								Nx.db.profile.Guide.ShowMines[17] = not Nx.db.profile.Guide.ShowMines[17]
+							end,
+						},
+						tin = {
+							order = 22,
 							type = "toggle",
 							width = "full",
 							name = L["Tin Vein"],
 							desc = L["Display"] .. " " .. L["Tin Vein"] .. " " .. L["Nodes On Map"],
 							get = function()
-								return Nx.db.profile.Guide.ShowMines[20] 
+								return Nx.db.profile.Guide.ShowMines[20]
 							end,
 							set = function()
-								Nx.db.profile.Guide.ShowMines[20] = not Nx.db.profile.Guide.ShowMines[20]								
-							end,							
-						},						
-						truesilver = {						
-							order = 21,
+								Nx.db.profile.Guide.ShowMines[20] = not Nx.db.profile.Guide.ShowMines[20]
+							end,
+						},
+						truesilver = {
+							order = 23,
 							type = "toggle",
 							width = "full",
 							name = L["Truesilver Deposit"],
 							desc = L["Display"] .. " " .. L["Truesilver Deposit"] .. " " .. L["Nodes On Map"],
 							get = function()
-								return Nx.db.profile.Guide.ShowMines[21] 
+								return Nx.db.profile.Guide.ShowMines[21]
 							end,
 							set = function()
-								Nx.db.profile.Guide.ShowMines[21] = not Nx.db.profile.Guide.ShowMines[21]								
-							end,							
-						},						
-						cobalt = {						
-							order = 22,
+								Nx.db.profile.Guide.ShowMines[21] = not Nx.db.profile.Guide.ShowMines[21]
+							end,
+						},
+						cobalt = {
+							order = 24,
 							type = "toggle",
 							width = "full",
 							name = L["Cobalt Deposit"],
 							desc = L["Display"] .. " " .. L["Cobalt Deposit"] .. " " .. L["Nodes On Map"],
 							get = function()
-								return Nx.db.profile.Guide.ShowMines[22] 
+								return Nx.db.profile.Guide.ShowMines[22]
 							end,
 							set = function()
-								Nx.db.profile.Guide.ShowMines[22] = not Nx.db.profile.Guide.ShowMines[22]								
-							end,							
-						},												
-						richcobalt = {						
-							order = 23,
+								Nx.db.profile.Guide.ShowMines[22] = not Nx.db.profile.Guide.ShowMines[22]
+							end,
+						},
+						richcobalt = {
+							order = 25,
 							type = "toggle",
 							width = "full",
 							name = L["Rich Cobalt Deposit"],
 							desc = L["Display"] .. " " .. L["Rich Cobalt Deposit"] .. " " .. L["Nodes On Map"],
 							get = function()
-								return Nx.db.profile.Guide.ShowMines[23] 
+								return Nx.db.profile.Guide.ShowMines[23]
 							end,
 							set = function()
-								Nx.db.profile.Guide.ShowMines[23] = not Nx.db.profile.Guide.ShowMines[23]								
-							end,							
-						},												
-						saronite = {						
-							order = 24,
+								Nx.db.profile.Guide.ShowMines[23] = not Nx.db.profile.Guide.ShowMines[23]
+							end,
+						},
+						saronite = {
+							order = 26,
 							type = "toggle",
 							width = "full",
 							name = L["Saronite Deposit"],
 							desc = L["Display"] .. " " .. L["Saronite Deposit"] .. " " .. L["Nodes On Map"],
 							get = function()
-								return Nx.db.profile.Guide.ShowMines[24] 
+								return Nx.db.profile.Guide.ShowMines[24]
 							end,
 							set = function()
-								Nx.db.profile.Guide.ShowMines[24] = not Nx.db.profile.Guide.ShowMines[24]								
-							end,							
-						},												
-						richsaron = {						
-							order = 25,
+								Nx.db.profile.Guide.ShowMines[24] = not Nx.db.profile.Guide.ShowMines[24]
+							end,
+						},
+						richsaron = {
+							order = 27,
 							type = "toggle",
 							width = "full",
 							name = L["Rich Saronite Deposit"],
 							desc = L["Display"] .. " " .. L["Rich Saronite Deposit"] .. " " .. L["Nodes On Map"],
 							get = function()
-								return Nx.db.profile.Guide.ShowMines[25] 
+								return Nx.db.profile.Guide.ShowMines[25]
 							end,
 							set = function()
-								Nx.db.profile.Guide.ShowMines[25] = not Nx.db.profile.Guide.ShowMines[25]								
-							end,							
-						},												
-						titan = {						
-							order = 26,
+								Nx.db.profile.Guide.ShowMines[25] = not Nx.db.profile.Guide.ShowMines[25]
+							end,
+						},
+						titan = {
+							order = 28,
 							type = "toggle",
 							width = "full",
 							name = L["Titanium Vein"],
 							desc = L["Display"] .. " " .. L["Titanium Vein"] .. " " .. L["Nodes On Map"],
 							get = function()
-								return Nx.db.profile.Guide.ShowMines[26] 
+								return Nx.db.profile.Guide.ShowMines[26]
 							end,
 							set = function()
-								Nx.db.profile.Guide.ShowMines[26] = not Nx.db.profile.Guide.ShowMines[26]								
-							end,							
-						},												
-						obsid = {						
-							order = 27,
+								Nx.db.profile.Guide.ShowMines[26] = not Nx.db.profile.Guide.ShowMines[26]
+							end,
+						},
+						obsid = {
+							order = 29,
 							type = "toggle",
 							width = "full",
 							name = L["Obsidium Deposit"],
 							desc = L["Display"] .. " " .. L["Obsidium Deposit"] .. " " .. L["Nodes On Map"],
 							get = function()
-								return Nx.db.profile.Guide.ShowMines[27] 
+								return Nx.db.profile.Guide.ShowMines[27]
 							end,
 							set = function()
-								Nx.db.profile.Guide.ShowMines[27] = not Nx.db.profile.Guide.ShowMines[27]								
-							end,							
-						},												
-						richobs = {						
-							order = 28,
+								Nx.db.profile.Guide.ShowMines[27] = not Nx.db.profile.Guide.ShowMines[27]
+							end,
+						},
+						richobs = {
+							order = 30,
 							type = "toggle",
 							width = "full",
 							name = L["Rich Obsidium Deposit"],
 							desc = L["Display"] .. " " .. L["Rich Obsidium Deposit"] .. " " .. L["Nodes On Map"],
 							get = function()
-								return Nx.db.profile.Guide.ShowMines[28] 
+								return Nx.db.profile.Guide.ShowMines[28]
 							end,
 							set = function()
-								Nx.db.profile.Guide.ShowMines[28] = not Nx.db.profile.Guide.ShowMines[28]								
-							end,							
+								Nx.db.profile.Guide.ShowMines[28] = not Nx.db.profile.Guide.ShowMines[28]
+							end,
 						},
-						elemen = {						
-							order = 29,
+						elemen = {
+							order = 31,
 							type = "toggle",
 							width = "full",
 							name = L["Elementium Vein"],
 							desc = L["Display"] .. " " .. L["Elementium Vein"] .. " " .. L["Nodes On Map"],
 							get = function()
-								return Nx.db.profile.Guide.ShowMines[29] 
+								return Nx.db.profile.Guide.ShowMines[29]
 							end,
 							set = function()
-								Nx.db.profile.Guide.ShowMines[29] = not Nx.db.profile.Guide.ShowMines[29]								
-							end,							
-						},						
-						richelem = {						
-							order = 30,
+								Nx.db.profile.Guide.ShowMines[29] = not Nx.db.profile.Guide.ShowMines[29]
+							end,
+						},
+						richelem = {
+							order = 32,
 							type = "toggle",
 							width = "full",
 							name = L["Rich Elementium Vein"],
 							desc = L["Display"] .. " " .. L["Rich Elementium Vein"] .. " " .. L["Nodes On Map"],
 							get = function()
-								return Nx.db.profile.Guide.ShowMines[30] 
+								return Nx.db.profile.Guide.ShowMines[30]
 							end,
 							set = function()
-								Nx.db.profile.Guide.ShowMines[30] = not Nx.db.profile.Guide.ShowMines[30]								
-							end,							
-						},						
-						pyrite = {						
-							order = 31,
+								Nx.db.profile.Guide.ShowMines[30] = not Nx.db.profile.Guide.ShowMines[30]
+							end,
+						},
+						pyrite = {
+							order = 33,
 							type = "toggle",
 							width = "full",
 							name = L["Pyrite Deposit"],
 							desc = L["Display"] .. " " .. L["Pyrite Deposit"] .. " " .. L["Nodes On Map"],
 							get = function()
-								return Nx.db.profile.Guide.ShowMines[31] 
+								return Nx.db.profile.Guide.ShowMines[31]
 							end,
 							set = function()
-								Nx.db.profile.Guide.ShowMines[31] = not Nx.db.profile.Guide.ShowMines[31]								
-							end,							
-						},						
-						richpyr = {						
-							order = 32,
+								Nx.db.profile.Guide.ShowMines[31] = not Nx.db.profile.Guide.ShowMines[31]
+							end,
+						},
+						richpyr = {
+							order = 34,
 							type = "toggle",
 							width = "full",
 							name = L["Rich Pyrite Deposit"],
 							desc = L["Display"] .. " " .. L["Rich Pyrite Deposit"] .. " " .. L["Nodes On Map"],
 							get = function()
-								return Nx.db.profile.Guide.ShowMines[32] 
+								return Nx.db.profile.Guide.ShowMines[32]
 							end,
 							set = function()
-								Nx.db.profile.Guide.ShowMines[32] = not Nx.db.profile.Guide.ShowMines[32]								
-							end,							
-						},						
-						ghost = {						
-							order = 33,
+								Nx.db.profile.Guide.ShowMines[32] = not Nx.db.profile.Guide.ShowMines[32]
+							end,
+						},
+						ghost = {
+							order = 35,
 							type = "toggle",
 							width = "full",
 							name = L["Ghost Iron Deposit"],
 							desc = L["Display"] .. " " .. L["Ghost Iron Deposit"] .. " " .. L["Nodes On Map"],
 							get = function()
-								return Nx.db.profile.Guide.ShowMines[33] 
+								return Nx.db.profile.Guide.ShowMines[33]
 							end,
 							set = function()
-								Nx.db.profile.Guide.ShowMines[33] = not Nx.db.profile.Guide.ShowMines[33]								
-							end,							
-						},						
-						richghost = {						
-							order = 34,
+								Nx.db.profile.Guide.ShowMines[33] = not Nx.db.profile.Guide.ShowMines[33]
+							end,
+						},
+						richghost = {
+							order = 36,
 							type = "toggle",
 							width = "full",
 							name = L["Rich Ghost Iron Deposit"],
 							desc = L["Display"] .. " " .. L["Rich Ghost Iron Deposit"] .. " " .. L["Nodes On Map"],
 							get = function()
-								return Nx.db.profile.Guide.ShowMines[34] 
+								return Nx.db.profile.Guide.ShowMines[34]
 							end,
 							set = function()
-								Nx.db.profile.Guide.ShowMines[34] = not Nx.db.profile.Guide.ShowMines[34]								
-							end,							
-						},						
-						kypar = {						
-							order = 35,
+								Nx.db.profile.Guide.ShowMines[34] = not Nx.db.profile.Guide.ShowMines[34]
+							end,
+						},
+						kypar = {
+							order = 37,
 							type = "toggle",
 							width = "full",
 							name = L["Kyparite Deposit"],
 							desc = L["Display"] .. " " .. L["Kyparite Deposit"] .. " " .. L["Nodes On Map"],
 							get = function()
-								return Nx.db.profile.Guide.ShowMines[35] 
+								return Nx.db.profile.Guide.ShowMines[35]
 							end,
 							set = function()
-								Nx.db.profile.Guide.ShowMines[35] = not Nx.db.profile.Guide.ShowMines[35]								
-							end,							
-						},						
-						richkyp = {						
-							order = 36,
+								Nx.db.profile.Guide.ShowMines[35] = not Nx.db.profile.Guide.ShowMines[35]
+							end,
+						},
+						richkyp = {
+							order = 38,
 							type = "toggle",
 							width = "full",
 							name = L["Rich Kyparite Deposit"],
 							desc = L["Display"] .. " " .. L["Rich Kyparite Deposit"] .. " " .. L["Nodes On Map"],
 							get = function()
-								return Nx.db.profile.Guide.ShowMines[36] 
+								return Nx.db.profile.Guide.ShowMines[36]
 							end,
 							set = function()
-								Nx.db.profile.Guide.ShowMines[36] = not Nx.db.profile.Guide.ShowMines[36]								
-							end,							
-						},						
-						trill = {						
-							order = 37,
+								Nx.db.profile.Guide.ShowMines[36] = not Nx.db.profile.Guide.ShowMines[36]
+							end,
+						},
+						trill = {
+							order = 39,
 							type = "toggle",
 							width = "full",
 							name = L["Trillium Vein"],
 							desc = L["Display"] .. " " .. L["Trillium Vein"] .. " " .. L["Nodes On Map"],
 							get = function()
-								return Nx.db.profile.Guide.ShowMines[37] 
+								return Nx.db.profile.Guide.ShowMines[37]
 							end,
 							set = function()
-								Nx.db.profile.Guide.ShowMines[37] = not Nx.db.profile.Guide.ShowMines[37]								
-							end,							
-						},						
-						richtrill = {						
-							order = 38,
+								Nx.db.profile.Guide.ShowMines[37] = not Nx.db.profile.Guide.ShowMines[37]
+							end,
+						},
+						richtrill = {
+							order = 40,
 							type = "toggle",
 							width = "full",
 							name = L["Rich Trillium Vein"],
 							desc = L["Display"] .. " " .. L["Rich Trillium Vein"] .. " " .. L["Nodes On Map"],
 							get = function()
-								return Nx.db.profile.Guide.ShowMines[38] 
+								return Nx.db.profile.Guide.ShowMines[38]
 							end,
 							set = function()
-								Nx.db.profile.Guide.ShowMines[38] = not Nx.db.profile.Guide.ShowMines[38]								
-							end,							
+								Nx.db.profile.Guide.ShowMines[38] = not Nx.db.profile.Guide.ShowMines[38]
+							end,
+						},
+						richtrueiron = {
+							order = 41,
+							type = "toggle",
+							width = "full",
+							name = L["Rich True Iron Deposit"],
+							desc = L["Display"] .. " " .. L["Rich True Iron Deposit"] .. " " .. L["Nodes On Map"],
+							get = function()
+								return Nx.db.profile.Guide.ShowMines[39]
+							end,
+							set = function()
+								Nx.db.profile.Guide.ShowMines[39] = not Nx.db.profile.Guide.ShowMines[39]
+							end,
+						},
+						smolderingtrueiron = {
+							order = 42,
+							type = "toggle",
+							width = "full",
+							name = L["Smoldering True Iron Deposit"],
+							desc = L["Display"] .. " " .. L["Smoldering True Iron Deposit"] .. " " .. L["Nodes On Map"],
+							get = function()
+								return Nx.db.profile.Guide.ShowMines[40]
+							end,
+							set = function()
+								Nx.db.profile.Guide.ShowMines[40] = not Nx.db.profile.Guide.ShowMines[40]
+							end,
+						},
+						trueiron = {
+							order = 43,
+							type = "toggle",
+							width = "full",
+							name = L["True Iron Deposit"],
+							desc = L["Display"] .. " " .. L["True Iron Deposit"] .. " " .. L["Nodes On Map"],
+							get = function()
+								return Nx.db.profile.Guide.ShowMines[41]
+							end,
+							set = function()
+								Nx.db.profile.Guide.ShowMines[41] = not Nx.db.profile.Guide.ShowMines[41]
+							end,
+						},
+						blackrock = {
+							order = 44,
+							type = "toggle",
+							width = "full",
+							name = L["Blackrock Deposit"],
+							desc = L["Display"] .. " " .. L["Blackrock Deposit"] .. " " .. L["Nodes On Map"],
+							get = function()
+								return Nx.db.profile.Guide.ShowMines[42]
+							end,
+							set = function()
+								Nx.db.profile.Guide.ShowMines[42] = not Nx.db.profile.Guide.ShowMines[42]
+							end,
+						},
+						richblackrock = {
+							order = 45,
+							type = "toggle",
+							width = "full",
+							name = L["Rich Blackrock Deposit"],
+							desc = L["Display"] .. " " .. L["Rich Blackrock Deposit"] .. " " .. L["Nodes On Map"],
+							get = function()
+								return Nx.db.profile.Guide.ShowMines[43]
+							end,
+							set = function()
+								Nx.db.profile.Guide.ShowMines[43] = not Nx.db.profile.Guide.ShowMines[43]
+							end,
+						},
+						felslatedeposit = {
+							order = 46,
+							type = "toggle",
+							width = "full",
+							name = L["Felslate Deposit"], -- 256
+							desc = L["Display"] .. " " .. L["Felslate Deposit"] .. " " .. L["Nodes On Map"],
+							get = function()
+								return Nx.db.profile.Guide.ShowMines[44]
+							end,
+							set = function()
+								Nx.db.profile.Guide.ShowMines[44] = not Nx.db.profile.Guide.ShowMines[44]
+							end,
 						},						
-					},					
+						felslateseam = {
+							order = 47,
+							type = "toggle",
+							width = "full",
+							name = L["Felslate Seam"], -- 258
+							desc = L["Display"] .. " " .. L["Felslate Seam"] .. " " .. L["Nodes On Map"],
+							get = function()
+								return Nx.db.profile.Guide.ShowMines[45]
+							end,
+							set = function()
+								Nx.db.profile.Guide.ShowMines[45] = not Nx.db.profile.Guide.ShowMines[45]
+							end,
+						},
+						livingfelslate = {
+							order = 48,
+							type = "toggle",
+							width = "full",
+							name = L["Living Felslate"], -- 257
+							desc = L["Display"] .. " " .. L["Living Felslate"] .. " " .. L["Nodes On Map"],
+							get = function()
+								return Nx.db.profile.Guide.ShowMines[46]
+							end,
+							set = function()
+								Nx.db.profile.Guide.ShowMines[46] = not Nx.db.profile.Guide.ShowMines[46]
+							end,
+						},
+						leystonedeposit = {
+							order = 49,
+							type = "toggle",
+							width = "full",
+							name = L["Leystone Deposit"], -- 253
+							desc = L["Display"] .. " " .. L["Leystone Deposit"] .. " " .. L["Nodes On Map"],
+							get = function()
+								return Nx.db.profile.Guide.ShowMines[47]
+							end,
+							set = function()
+								Nx.db.profile.Guide.ShowMines[47] = not Nx.db.profile.Guide.ShowMines[47]
+							end,
+						},
+						leystoneseam = {
+							order = 50,
+							type = "toggle",
+							width = "full",
+							name = L["Leystone Seam"], -- 255
+							desc = L["Display"] .. " " .. L["Leystone Seam"] .. " " .. L["Nodes On Map"],
+							get = function()
+								return Nx.db.profile.Guide.ShowMines[48]
+							end,
+							set = function()
+								Nx.db.profile.Guide.ShowMines[48] = not Nx.db.profile.Guide.ShowMines[48]
+							end,
+						},
+						livingleystone = {
+							order = 51,
+							type = "toggle",
+							width = "full",
+							name = L["Living Leystone"], -- 254
+							desc = L["Display"] .. " " .. L["Living Leystone"] .. " " .. L["Nodes On Map"],
+							get = function()
+								return Nx.db.profile.Guide.ShowMines[49]
+							end,
+							set = function()
+								Nx.db.profile.Guide.ShowMines[49] = not Nx.db.profile.Guide.ShowMines[49]
+							end,
+						},
+						infernalbrimstone = {
+							order = 52,
+							type = "toggle",
+							width = "full",
+							name = L["Infernal Brimstone"],
+							desc = L["Display"] .. " " .. L["Infernal Brimstone"] .. " " .. L["Nodes On Map"],
+							get = function()
+								return Nx.db.profile.Guide.ShowMines[50]
+							end,
+							set = function()
+								Nx.db.profile.Guide.ShowMines[50] = not Nx.db.profile.Guide.ShowMines[50]
+							end,
+						},						
+					},
+				},
+				TimberDisp = {
+					order = 5,
+					type = "group",
+					name = L["Timber"],
+					args = {
+						tenableall = {
+							order = 1,
+							type = "execute",
+							width = "double",
+							name = "Enable All",
+							func = function()
+								for i = 1,3 do
+									Nx.db.profile.Guide.ShowTimber[i] = true
+								end
+							end,
+						},
+						tdisableall = {
+							order = 2,
+							type = "execute",
+							width = "double",
+							name = "Disable All",
+							func = function()
+								for i = 1,3 do
+									Nx.db.profile.Guide.ShowTimber[i] = false
+								end
+							end,
+						},					
+						small = {
+							order = 3,
+							type = "toggle",
+							width = "full",
+							name = L["Small Timber"],
+							desc = L["Display"] .. " " .. L["Small Timber"] .. " " .. L["Nodes On Map"],
+							get = function()
+								return Nx.db.profile.Guide.ShowTimber[1]
+							end,
+							set = function()
+								Nx.db.profile.Guide.ShowTimber[1] = not Nx.db.profile.Guide.ShowTimber[1]
+							end,
+						},
+						med = {
+							order = 4,
+							type = "toggle",
+							width = "full",
+							name = L["Medium Timber"],
+							desc = L["Display"] .. " " .. L["Medium Timber"] .. " " .. L["Nodes On Map"],
+							get = function()
+								return Nx.db.profile.Guide.ShowTimber[2]
+							end,
+							set = function()
+								Nx.db.profile.Guide.ShowTimber[2] = not Nx.db.profile.Guide.ShowTimber[2]
+							end,
+						},						
+						large = {
+							order = 5,
+							type = "toggle",
+							width = "full",
+							name = L["Large Timber"],
+							desc = L["Display"] .. " " .. L["Large Timber"] .. " " .. L["Nodes On Map"],
+							get = function()
+								return Nx.db.profile.Guide.ShowTimber[3]
+							end,
+							set = function()
+								Nx.db.profile.Guide.ShowTimber[3] = not Nx.db.profile.Guide.ShowTimber[3]
+							end,
+						},						
+					},
 				},				
 			},
 		}
@@ -3316,7 +3697,7 @@ local menuoptions
 
 local function menuConfig()
 	if not menuoptions then
-		menuoptions = {		
+		menuoptions = {
 			type = "group",
 			name = L["Menu Options"],
 			args = {
@@ -3327,12 +3708,12 @@ local function menuConfig()
 					name = L["Center Menus Horizontally On Cursor"],
 					desc = L["When Enabled, Carbonite Menus Will Be Drawn Horizontally Centered On The Mouse"],
 					get = function()
-						return Nx.db.profile.Menu.CenterH 
+						return Nx.db.profile.Menu.CenterH
 					end,
 					set = function()
 						Nx.db.profile.Menu.CenterH = not Nx.db.profile.Menu.CenterH
-					end,				
-				},	
+					end,
+				},
 				menuCenterY = {
 					order = 2,
 					type = "toggle",
@@ -3340,12 +3721,12 @@ local function menuConfig()
 					name = L["Center Menus Vertically On Cursor"],
 					desc = L["When Enabled, Carbonite Menus Will Be Drawn Vertically Centered On The Mouse"],
 					get = function()
-						return Nx.db.profile.Menu.CenterV 
+						return Nx.db.profile.Menu.CenterV
 					end,
 					set = function()
 						Nx.db.profile.Menu.CenterV = not Nx.db.profile.Menu.CenterV
-					end,				
-				},						
+					end,
+				},
 			},
 		}
 	end
@@ -3366,12 +3747,12 @@ local function commConfig()
 					name = L["Send Position & Level Ups To Friends"],
 					desc = L["When Enabled, Carbonite will send your current location and any levelups you get to your other friends using carbonite"],
 					get = function()
-						return Nx.db.profile.Comm.SendToFriends 
+						return Nx.db.profile.Comm.SendToFriends
 					end,
 					set = function()
 						Nx.db.profile.Comm.SendToFriends = not Nx.db.profile.Comm.SendToFriends
-					end,				
-				},	
+					end,
+				},
 				commLTG = {
 					order = 2,
 					type = "toggle",
@@ -3379,12 +3760,12 @@ local function commConfig()
 					name = L["Send Position & Level Ups To Guild"],
 					desc = L["When Enabled, Carbonite will send your current location and any levelups you get to your other guildmates using carbonite"],
 					get = function()
-						return Nx.db.profile.Comm.SendToGuild 
+						return Nx.db.profile.Comm.SendToGuild
 					end,
 					set = function()
 						Nx.db.profile.Comm.SendToGuild = not Nx.db.profile.Comm.SendToGuild
-					end,				
-				},		
+					end,
+				},
 				commLTZ = {
 					order = 3,
 					type = "toggle",
@@ -3392,12 +3773,12 @@ local function commConfig()
 					name = L["Send Position & Level Ups To Zone"],
 					desc = L["When Enabled, Carbonite will send your current location and any levelups you get to other carbonite useres in your current zone"],
 					get = function()
-						return Nx.db.profile.Comm.SendToZone 
+						return Nx.db.profile.Comm.SendToZone
 					end,
 					set = function()
 						Nx.db.profile.Comm.SendToZone = not Nx.db.profile.Comm.SendToZone
-					end,				
-				},		
+					end,
+				},
 				commShowLevel = {
 					order = 4,
 					type = "toggle",
@@ -3409,8 +3790,8 @@ local function commConfig()
 					end,
 					set = function()
 						Nx.db.profile.Comm.LvlUpShow = not Nx.db.profile.Comm.LvlUpShow
-					end,				
-				},		
+					end,
+				},
 				commDisG = {
 					order = 5,
 					type = "toggle",
@@ -3418,12 +3799,12 @@ local function commConfig()
 					name = L["Enable Global Channel (Used for version checks/notices)"],
 					desc = L["When Enabled, Carbonite will listen on a global channel for versions others are using so it can tell you if an update is available"],
 					get = function()
-						return Nx.db.profile.Comm.Global 
+						return Nx.db.profile.Comm.Global
 					end,
 					set = function()
 						Nx.db.profile.Comm.Global = not Nx.db.profile.Comm.Global
-					end,				
-				},		
+					end,
+				},
 				commDisZ = {
 					order = 6,
 					type = "toggle",
@@ -3431,14 +3812,14 @@ local function commConfig()
 					name = L["Enable Zone Channel (Used for locations of others in your zone)"],
 					desc = L["When Enabled, Carbonite will send your current location and listen for messages from others who are in the same zone as you"],
 					get = function()
-						return Nx.db.profile.Comm.Zone 
+						return Nx.db.profile.Comm.Zone
 					end,
 					set = function()
 						Nx.db.profile.Comm.Zone = not Nx.db.profile.Comm.Zone
-					end,				
-				},		
-				
-			},			
+					end,
+				},
+
+			},
 		}
 	end
 	return commoptions
@@ -3450,12 +3831,12 @@ local function skinConfig()
 		skinoptions = {
 			type = "group",
 			name = L["Skin Options"],
-			args = {		
+			args = {
 				SkinSelect = {
 					order = 1,
-					type	= "select",
-					name	= L["Current Skin"],
-					desc	= L["Sets the current skin for carbonite windows"],
+					type = "select",
+					name = L["Current Skin"],
+					desc = L["Sets the current skin for carbonite windows"],
 					get	= function()
 						local vals = Nx.Opts:CalcChoices("Skins")
 						for a,b in pairs(vals) do
@@ -3467,7 +3848,7 @@ local function skinConfig()
 					end,
 					set	= function(info, name)
 						local vals = Nx.Opts:CalcChoices("Skins")
-						Nx.db.profile.Skin.Name = vals[name]	
+						Nx.db.profile.Skin.Name = vals[name]
 						if vals[name] == "Default" then
 							Nx.db.profile.Skin.Name = ""
 						end
@@ -3475,7 +3856,7 @@ local function skinConfig()
 					end,
 					values	= function()
 						return Nx.Opts:CalcChoices("Skins")
-					end,					
+					end,
 				},
 				skinBord = {
 					order = 2,
@@ -3494,8 +3875,8 @@ local function skinConfig()
 					set = function(_,r,g,b,a)
 						Nx.db.profile.Skin.WinBdColor = r .. "|" .. g .. "|" .. b .. "|" .. a
 						Nx.Skin:Update()
-					end,						
-				},				
+					end,
+				},
 				skinFixBG = {
 					order = 3,
 					type = "color",
@@ -3513,8 +3894,8 @@ local function skinConfig()
 					set = function(_,r,g,b,a)
 						Nx.db.profile.Skin.WinFixedBgColor = r .. "|" .. g .. "|" .. b .. "|" .. a
 						Nx.Skin:Update()
-					end,						
-				},		
+					end,
+				},
 				skinSizeBG = {
 					order = 4,
 					type = "color",
@@ -3532,9 +3913,9 @@ local function skinConfig()
 					set = function(_,r,g,b,a)
 						Nx.db.profile.Skin.WinSizedBgColor = r .. "|" .. g .. "|" .. b .. "|" .. a
 						Nx.Skin:Update()
-					end,						
-				},		
-				
+					end,
+				},
+
 			},
 		}
 	end
@@ -3545,7 +3926,7 @@ local trackoptions
 
 local function trackConfig()
 	if not trackoptions then
-		trackoptions = {		
+		trackoptions = {
 			type = "group",
 			name = L["Tracking Options"],
 			args = {
@@ -3560,8 +3941,8 @@ local function trackConfig()
 					end,
 					set = function()
 						Nx.db.profile.Track.Hide = not Nx.db.profile.Track.Hide
-					end,				
-				},		
+					end,
+				},
 				hideHUDBG = {
 					order = 2,
 					type = "toggle",
@@ -3573,8 +3954,8 @@ local function trackConfig()
 					end,
 					set = function()
 						Nx.db.profile.Track.HideInBG = not Nx.db.profile.Track.HideInBG
-					end,				
-				},		
+					end,
+				},
 				hideLock = {
 					order = 3,
 					type = "toggle",
@@ -3587,13 +3968,13 @@ local function trackConfig()
 					set = function()
 						Nx.db.profile.Track.Lock = not Nx.db.profile.Track.Lock
 						Nx.HUD:UpdateOptions()
-					end,				
-				},		
+					end,
+				},
 				TrackArrow = {
 					order = 4,
-					type	= "select",
-					name	= L["Tracking HUD Arrow Graphic"],
-					desc	= L["Sets the current arrow to be used in the tracking hud"],
+					type = "select",
+					name = L["Tracking HUD Arrow Graphic"],
+					desc = L["Sets the current arrow to be used in the tracking hud"],
 					get	= function()
 						local vals = Nx.Opts:CalcChoices("HUDAGfx")
 						for a,b in pairs(vals) do
@@ -3605,12 +3986,12 @@ local function trackConfig()
 					end,
 					set	= function(info, name)
 						local vals = Nx.Opts:CalcChoices("HUDAGfx")
-						Nx.db.profile.Track.AGfx = vals[name]	
+						Nx.db.profile.Track.AGfx = vals[name]
 						Nx.HUD:UpdateOptions()
 					end,
 					values	= function()
 						return Nx.Opts:CalcChoices("HUDAGfx")
-					end,					
+					end,
 				},
 				spacer = {
 					order = 5,
@@ -3620,7 +4001,7 @@ local function trackConfig()
 				},
 				ArrowSize = {
 					order = 6,
-					type = "range",							
+					type = "range",
 					name = L["Arrow Size"],
 					desc = L["Sets the number of size of the tracking hud arrow."],
 					min = 8,
@@ -3631,13 +4012,13 @@ local function trackConfig()
 						return Nx.db.profile.Track.ASize
 					end,
 					set = function(info,value)
-						Nx.db.profile.Track.ASize = value								
+						Nx.db.profile.Track.ASize = value
 						Nx.HUD:UpdateOptions()
-					end,				
-				},								
+					end,
+				},
 				AXO = {
 					order = 7,
-					type = "range",							
+					type = "range",
 					name = L["Arrow X Offset"],
 					desc = L["Sets the X offset of the tracking hud arrow."],
 					min = -100,
@@ -3648,14 +4029,14 @@ local function trackConfig()
 						return Nx.db.profile.Track.AXO
 					end,
 					set = function(info,value)
-						Nx.db.profile.Track.AXO = value								
+						Nx.db.profile.Track.AXO = value
 						Nx.HUD:UpdateOptions()
-					end,				
-				},								
+					end,
+				},
 				AYO = {
 					order = 8,
-					type = "range",							
-					name = L["Arrow Y Offset"],						
+					type = "range",
+					name = L["Arrow Y Offset"],
 					desc = L["Sets the Y offset of the tracking hud arrow."],
 					min = -100,
 					max = 100,
@@ -3665,10 +4046,10 @@ local function trackConfig()
 						return Nx.db.profile.Track.AYO
 					end,
 					set = function(info,value)
-						Nx.db.profile.Track.AYO = value								
+						Nx.db.profile.Track.AYO = value
 						Nx.HUD:UpdateOptions()
-					end,				
-				},								
+					end,
+				},
 				showText = {
 					order = 9,
 					type = "toggle",
@@ -3681,8 +4062,8 @@ local function trackConfig()
 					set = function()
 						Nx.db.profile.Track.ShowDir = not Nx.db.profile.Track.ShowDir
 						Nx.HUD:UpdateOptions()
-					end,				
-				},						
+					end,
+				},
 				addTbut = {
 					order = 10,
 					type = "toggle",
@@ -3695,8 +4076,8 @@ local function trackConfig()
 					set = function()
 						Nx.db.profile.Track.TBut = not Nx.db.profile.Track.TBut
 						Nx.HUD:UpdateOptions()
-					end,				
-				},										
+					end,
+				},
 				Tbutcol = {
 					order = 11,
 					type = "color",
@@ -3714,8 +4095,8 @@ local function trackConfig()
 					set = function(_,r,g,b,a)
 						Nx.db.profile.Track.TButColor = r .. "|" .. g .. "|" .. b .. "|" .. a
 						Nx.HUD:UpdateOptions()
-					end,						
-				},						
+					end,
+				},
 				Tbutcomcol = {
 					order = 12,
 					type = "color",
@@ -3733,8 +4114,8 @@ local function trackConfig()
 					set = function(_,r,g,b,a)
 						Nx.db.profile.Track.TButCombatColor = r .. "|" .. g .. "|" .. b .. "|" .. a
 						Nx.Skin:Update()
-					end,						
-				},						
+					end,
+				},
 				addsound = {
 					order = 13,
 					type = "toggle",
@@ -3747,8 +4128,8 @@ local function trackConfig()
 					set = function()
 						Nx.db.profile.Track.TSoundOn = not Nx.db.profile.Track.TSoundOn
 						Nx.HUD:UpdateOptions()
-					end,				
-				},					
+					end,
+				},
 				spacer2 = {
 					order = 14,
 					type = "description",
@@ -3765,9 +4146,9 @@ local function trackConfig()
 						return Nx.db.profile.Track.ATBGPal
 					end,
 					set = function()
-						Nx.db.profile.Track.ATBGPal = not Nx.db.profile.Track.ATBGPal						
-					end,				
-				},					
+						Nx.db.profile.Track.ATBGPal = not Nx.db.profile.Track.ATBGPal
+					end,
+				},
 				autotaxi = {
 					order = 16,
 					type = "toggle",
@@ -3778,10 +4159,10 @@ local function trackConfig()
 						return Nx.db.profile.Track.ATTaxi
 					end,
 					set = function()
-						Nx.db.profile.Track.ATtaxi = not Nx.db.profile.Track.ATTaxi
+						Nx.db.profile.Track.ATTaxi = not Nx.db.profile.Track.ATTaxi
 						Nx.HUD:UpdateOptions()
-					end,				
-				},					
+					end,
+				},
 				autocorpse = {
 					order = 17,
 					type = "toggle",
@@ -3794,14 +4175,14 @@ local function trackConfig()
 					set = function()
 						Nx.db.profile.Track.ATCorpse = not Nx.db.profile.Track.ATCorpse
 						Nx.HUD:UpdateOptions()
-					end,				
-				},									
+					end,
+				},
 				spacer3 = {
 					order = 18,
 					type = "description",
 					width = "full",
 					name = " ",
-				},				
+				},
 				emutomtom = {
 					order = 19,
 					type = "toggle",
@@ -3814,8 +4195,8 @@ local function trackConfig()
 					set = function()
 						Nx.db.profile.Track.EmuTomTom = not Nx.db.profile.Track.EmuTomTom
 						Nx.HUD:UpdateOptions()
-					end,				
-				},									
+					end,
+				},
 			},
 		}
 	end
@@ -3831,7 +4212,7 @@ function Nx:SetupConfig()
 	Nx:AddToConfig("Maps",mapConfig(),L["Maps"])
 	Nx:AddToConfig("Menus",menuConfig(),L["Menus"])
 	Nx:AddToConfig("Privacy",commConfig(),L["Privacy"])
-	Nx:AddToConfig("Profiles",profilesConfig(),L["Profiles"])
+	--Nx:AddToConfig("Profiles",profilesConfig(),L["Profiles"])
 	Nx:AddToConfig("Skin",skinConfig(),L["Skin"])
 	Nx:AddToConfig("Tracking HUD",trackConfig(),L["Tracking HUD"])
 end
@@ -3847,13 +4228,13 @@ end
 
 Nx.OptsDataSounds = {
 	"Interface\\AddOns\\Carbonite\\Snd\\QuestComplete.ogg",
-	"Sound\\Creature\\Peon\\PeonBuildingComplete1.wav",
-	"Sound\\Character\\Scourge\\ScourgeVocalMale\\UndeadMaleCongratulations02.wav",
-	"Sound\\Character\\Human\\HumanVocalFemale\\HumanFemaleCongratulations01.wav",
-	"Sound\\Character\\Dwarf\\DwarfVocalMale\\DwarfMaleCongratulations04.wav",
-	"Sound\\Character\\Gnome\\GnomeVocalMale\\GnomeMaleCongratulations03.wav",
-	"Sound\\Creature\\Tauren\\TaurenYes3.wav",
-	"Sound\\Creature\\UndeadMaleWarriorNPC\\UndeadMaleWarriorNPCGreeting01.wav",
+	"Sound\\Creature\\Peon\\PeonBuildingComplete1.ogg",
+	"Sound\\Character\\Scourge\\ScourgeVocalMale\\UndeadMaleCongratulations02.ogg",
+	"Sound\\Character\\Human\\HumanVocalFemale\\HumanFemaleCongratulations01.ogg",
+	"Sound\\Character\\Dwarf\\DwarfVocalMale\\DwarfMaleCongratulations04.ogg",
+	"Sound\\Character\\Gnome\\GnomeVocalMale\\GnomeMaleCongratulations03.ogg",
+	"Sound\\Creature\\Tauren\\TaurenYes3.ogg",
+	"Sound\\Creature\\UndeadMaleWarriorNPC\\UndeadMaleWarriorNPCGreeting01.ogg",
 }
 
 -------------------------------------------------------------------------------
@@ -3874,7 +4255,7 @@ function Nx.Opts:Init()
 		"Left", "Center", "Right",
 		"BottomLeft", "Bottom", "BottomRight",
 	}
-	self.Skins = {		
+	self.Skins = {
 		"Blackout","Blackout Blues","Dialog Blue",
 		"Dialog Gold","Simple Blue","Stone","Tool Blue",
 	}
@@ -3918,7 +4299,7 @@ end
 -- Show quick options timer
 
 function Nx.Opts:QuickOptsTimer()
-	
+
 	local i = Nx.db.profile.Version.QuickVer or 0
 
 	local ver = 5
@@ -3927,7 +4308,7 @@ function Nx.Opts:QuickOptsTimer()
 
 	if i < ver then
 
-		local function func()			
+		local function func()
 			Nx.db.profile.MiniMap.Own = true
 			Nx.db.profile.MiniMap.ButOwn = true
 			Nx.db.profile.MiniMap.ShowOldNameplate = false
@@ -3946,7 +4327,7 @@ end
 function Nx.Opts:Reset (onlyNew)
 	self.COpts = Nx.CurCharacter["Opts"]
 	self.Opts = Nx.db.profile
-	
+
 	if not onlyNew then
 		Nx.prt (L["Reset global options"])
 		Nx.db:ResetDB("Default")
@@ -4039,7 +4420,7 @@ function Nx.Opts:NXCmdCamForceMaxDist()
 --	Nx.prt ("Cam %s", GetCVar ("cameraDistanceMaxFactor"))
 
 	if Nx.db.profile.General.CameraForceMaxDist then
-		SetCVar ("cameraDistanceMaxFactor", 3.4)
+		SetCVar ("cameraDistanceMaxZoomFactor", 2.6)
 	end
 end
 
@@ -4058,7 +4439,14 @@ function Nx.Opts:NXCmdDeleteHerb()
 	local function func()
 		Nx:GatherDeleteHerb()
 	end
-	Nx:ShowMessage (L["Delete Herb Locations"] .. "?", "Delete", func, "Cancel")
+	Nx:ShowMessage (L["Delete Herbalism Gather Locations"] .. "?", L["Delete"], func, L["Cancel"])
+end
+
+function Nx.Opts:NXCmdDeleteTimber()
+	local function func()
+		Nx.GatherDeleteTimber()
+	end
+	Nx:ShowMessage (L["Delete Timber Gather Locations"] .. "?", L["Delete"], func, L["Cancel"])
 end
 
 function Nx.Opts:NXCmdDeleteMine()
@@ -4066,7 +4454,7 @@ function Nx.Opts:NXCmdDeleteMine()
 	local function func()
 		Nx:GatherDeleteMine()
 	end
-	Nx:ShowMessage (L["Delete Mine Locations"] .. "?", "Delete", func, "Cancel")
+	Nx:ShowMessage (L["Delete Mining Gather Locations"] .. "?", L["Delete"], func, L["Cancel"])
 end
 
 function Nx.Opts:NXCmdDeleteMisc()
@@ -4074,7 +4462,7 @@ function Nx.Opts:NXCmdDeleteMisc()
 	local function func()
 		Nx:GatherDeleteMisc()
 	end
-	Nx:ShowMessage (L["Delete Misc Locations"] .. "?", "Delete", func, "Cancel")
+	Nx:ShowMessage (L["Delete Misc Gather Locations"] .. "?", L["Delete"], func, L["Cancel"])
 end
 
 function Nx.Opts:NXCmdImportCarbHerb()
@@ -4082,7 +4470,7 @@ function Nx.Opts:NXCmdImportCarbHerb()
 	local function func()
 		Nx:GatherImportCarbHerb()
 	end
-	Nx:ShowMessage (L["Import Herbs"] .. "?", "Import", func, "Cancel")
+	Nx:ShowMessage (L["Import Herbs"] .. "?", L["Import"], func, L["Cancel"])
 end
 
 function Nx.Opts:NXCmdImportCarbMine()
@@ -4090,7 +4478,7 @@ function Nx.Opts:NXCmdImportCarbMine()
 	local function func()
 		Nx:GatherImportCarbMine()
 	end
-	Nx:ShowMessage (L["Import Mining"] .. "?", "Import", func, "Cancel")
+	Nx:ShowMessage (L["Import Mining"] .. "?", L["Import"], func, L["Cancel"])
 end
 
 function Nx.Opts:NXCmdImportCarbMisc()
@@ -4098,7 +4486,7 @@ function Nx.Opts:NXCmdImportCarbMisc()
 	local function func()
 		Nx:GatherImportCarbMisc()
 	end
-	Nx:ShowMessage (L["Import Misc"] .. "?", "Import", func, "Cancel")
+	Nx:ShowMessage (L["Import Misc"] .. "?", L["Import"], func, L["Cancel"])
 end
 
 --[[
@@ -4391,7 +4779,7 @@ function Nx.Opts:Update()
 
 						list:ItemSetColorButton (opts, item.V, false)
 
-					elseif typ == "CH" then	-- Choice
+					elseif typ == "CH" then		-- Choice
 
 						local i = self:GetVar (item.V)
 						istr = format ("%s  |cffffff80%s", istr, i)
@@ -4625,7 +5013,7 @@ end
 function Nx.Opts:ParseVar (varName)
 
 	local data = Nx.OptsVars[varName]
-	local scope, typ, val, a1 = Nx.Split ("~", data)	
+	local scope, typ, val, a1 = Nx.Split ("~", data)
 	local opts = scope == "-" and self.COpts or self.Opts
 
 --	Nx.prtVar ("Parse " .. varName, opts[varName])
@@ -4737,20 +5125,3 @@ end
 
 -------------------------------------------------------------------------------
 -- EOF
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

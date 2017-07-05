@@ -2,7 +2,7 @@ if ( GetLocale() ~= "esMX" ) then
 	return;
 end
 
-local L = LibStub("AceLocale-3.0"):NewLocale("Carbonite", "esMX", true)
+local L = LibStub("AceLocale-3.0"):NewLocale("Carbonite", "esMX")
 if not L then return end
 
 L["reached level"] = true
@@ -23,3 +23,11 @@ L["Warlock"] = true
 L["Warrior"] = true
 L["Deathknight"] = true
 L["Monk"] = true
+
+L["Com options reset (%f, %f)"] = true
+L["ComTest"] = true
+L["Disabling com functions!"] = true
+L["JoinChan Err %s"] = true
+L["SendSecG Error: %s"] = true
+L[" %s (pending)"] = true
+L["Com %d Bytes sec %d"] = true

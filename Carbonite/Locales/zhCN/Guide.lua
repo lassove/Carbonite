@@ -1,13 +1,11 @@
-local L = LibStub("AceLocale-3.0"):NewLocale("Carbonite", "zhCN", true)
+if ( GetLocale() ~= "zhCN" ) then
+	return
+end
+
+local L = LibStub("AceLocale-3.0"):NewLocale("Carbonite", "zhCN")
 if not L then return end
 
 -- Main Guide
-L["Kalimdor"] = "卡利姆多"
-L["Eastern Kingdoms"] = "东部王国"
-L["Outlands"] = "外域"
-L["Northrend"] = "诺森德"
-L["The Maelstrom"] = "大漩涡"
-L["Pandaria"] = "潘达利亚"
 L["All"] = "全部"
 L["Quest Givers"] = "任务给予人"
 L["Stable Master"] = "兽栏管理员"
@@ -16,7 +14,6 @@ L["Common Place"] = "常用地点"
 L["Auctioneer"] = "拍卖师"
 L["Banker"] = "银行管理员"
 L["Innkeeper"] = "旅店老板"
-L["Arcane Reforger"] = "奥术重铸师"
 L["Void Storage"] = "虚空仓库管理员"
 L["Transmogrifier"] = "物品幻化师"
 L["Battle Pet Trainer"] = "战斗宠物训练师"
@@ -70,7 +67,6 @@ L["Alchemy Lab"] = "炼金实验室"
 L["Altar Of Shadows"] = "黑暗祭坛"
 L["Mana Loom"] = "魔法织布机"
 L["Moonwell"] = "月亮井"
-L["Quest Givers"] = "任务给予人"
 
 -- Menus
 L["Delete"] = "删除"
